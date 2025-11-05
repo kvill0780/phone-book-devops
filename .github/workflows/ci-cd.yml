@@ -64,7 +64,7 @@ jobs:
     name: Build Backend
     needs: test-backend
     runs-on: ubuntu-latest
-    if: github.event_name == 'push'
+    if: false  # Désactivé temporairement - configurer DOCKER_USERNAME et DOCKER_PASSWORD d'abord
     steps:
       - uses: actions/checkout@v4
       
@@ -92,7 +92,7 @@ jobs:
     name: Build Frontend
     needs: test-frontend
     runs-on: ubuntu-latest
-    if: github.event_name == 'push'
+    if: false  # Désactivé temporairement - configurer DOCKER_USERNAME et DOCKER_PASSWORD d'abord
     steps:
       - uses: actions/checkout@v4
       
