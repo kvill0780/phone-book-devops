@@ -30,7 +30,7 @@ export const AuthProvider = ({ children }) => {
     try {
       const response = await authAPI.login({ username, password });
 
-      if (response.data && response.data.token) {
+      if (response.data?.token) {
         const userData = {
           username: response.data.username || username,
           token: response.data.token,
@@ -39,26 +39,34 @@ export const AuthProvider = ({ children }) => {
         };
 
         localStorage.setItem('userData', JSON.stringify(userData));
-        
         setUser(userData);
-
         return { success: true, user: userData };
       } else {
-        throw new Error('Token non reçu du serveur');
+        throw new Error('Structure de réponse invalide');
       }
     } catch (error) {
-      let errorMessage = 'Identifiants invalides';
+      // Gestion d'erreur détaillée
+      let errorMessage = 'Erreur de connexion';
       
-      if (error.response) {
-        errorMessage = error.response.data?.error || 
-                      error.response.data?.message || 
-                      `Erreur ${error.response.status}`;
-      } else if (error.request) {
+      if (error.code === 'ERR_NETWORK') {
         errorMessage = 'Impossible de joindre le serveur';
-      } else {
-        errorMessage = error.message || 'Erreur inconnue';
+      } else if (error.response?.status === 401) {
+        errorMessage = 'Identifiants incorrects';
+      } else if (error.response?.status === 403) {
+        errorMessage = 'Accès refusé';
+      } else if (error.response?.status === 429) {
+        errorMessage = 'Trop de tentatives. Réessayez plus tard';
+      } else if (error.response?.status >= 500) {
+        errorMessage = 'Erreur serveur, veuillez réessayer';
+      } else if (error.message === 'Structure de réponse invalide') {
+        errorMessage = 'Réponse du serveur invalide';
+      } else if (error.response?.data?.message) {
+        errorMessage = error.response.data.message;
       }
 
+      if (process.env.NODE_ENV === 'development') {
+        console.error('Erreur de login:', error);
+      }
       return { success: false, error: errorMessage };
     }
   };
@@ -73,11 +81,20 @@ export const AuthProvider = ({ children }) => {
       let errorMessage = 'Erreur lors de l\'inscription';
       
       if (error.response) {
-        errorMessage = error.response.data?.error || 
-                      error.response.data?.message || 
-                      `Erreur ${error.response.status}`;
+        const status = error.response.status;
+        if (status === 409) {
+          errorMessage = 'Ce nom d\'utilisateur existe déjà';
+        } else if (status === 400) {
+          errorMessage = error.response.data?.message || 'Données invalides';
+        } else if (status >= 500) {
+          errorMessage = 'Erreur serveur. Réessayez plus tard';
+        } else {
+          errorMessage = error.response.data?.error || 
+                        error.response.data?.message || 
+                        `Erreur ${status}`;
+        }
       } else if (error.request) {
-        errorMessage = 'Impossible de joindre le serveur';
+        errorMessage = 'Impossible de joindre le serveur. Vérifiez votre connexion';
       } else {
         errorMessage = error.message || 'Erreur inconnue';
       }

@@ -15,6 +15,23 @@ data:
         static_configs:
           - targets: ['backend:8080']
       
+      - job_name: 'redis'
+        static_configs:
+          - targets: ['redis:6379']
+      
+      - job_name: 'mysql'
+        static_configs:
+          - targets: ['mysql:3306']
+      
+      - job_name: 'kubernetes-nodes'
+        kubernetes_sd_configs:
+        - role: node
+        relabel_configs:
+        - source_labels: [__address__]
+          regex: '(.*):10250'
+          replacement: '${1}:9100'
+          target_label: __address__
+      
       - job_name: 'prometheus'
         static_configs:
           - targets: ['localhost:9090']

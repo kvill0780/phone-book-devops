@@ -77,23 +77,19 @@ spec:
                 configMapKeyRef:
                   name: app-config
                   key: MANAGEMENT_ENDPOINTS_WEB_EXPOSURE_INCLUDE
-          # Probes désactivées temporairement pour debug
-          # livenessProbe:
-          #   httpGet:
-          #     path: /actuator/health/liveness
-          #     port: 8080
-          #   initialDelaySeconds: 180
-          #   periodSeconds: 10
-          #   timeoutSeconds: 5
-          #   failureThreshold: 5
-          # readinessProbe:
-          #   httpGet:
-          #     path: /actuator/health/readiness
-          #     port: 8080
-          #   initialDelaySeconds: 150
-          #   periodSeconds: 10
-          #   timeoutSeconds: 5
-          #   failureThreshold: 5
+          livenessProbe:
+            httpGet:
+              path: /actuator/health
+              port: 8080
+            initialDelaySeconds: 90
+            periodSeconds: 10
+            timeoutSeconds: 5
+          readinessProbe:
+            httpGet:
+              path: /actuator/health
+              port: 8080
+            initialDelaySeconds: 30
+            periodSeconds: 5
           resources:
             requests:
               memory: "512Mi"

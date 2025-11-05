@@ -22,12 +22,15 @@ const ContactList = () => {
   const { isAuthenticated, loading: authLoading, user } = useAuth();
 
   useEffect(() => {
-    // Only load contacts if user is authenticated and not loading
-    if (!authLoading && isAuthenticated && user) {
+    if (authLoading) return;
+    
+    if (!isAuthenticated) {
+      // Redirection gérée par ProtectedRoute
+      return;
+    }
+    
+    if (isAuthenticated && user) {
       loadContacts();
-    } else if (!authLoading && !isAuthenticated) {
-      // If not authenticated, redirect will happen via ProtectedRoute
-      setLoading(false);
     }
   }, [isAuthenticated, authLoading, user]);
 
@@ -50,32 +53,23 @@ const ContactList = () => {
     try {
       setLoading(true);
       setError('');
-      console.log('Chargement des contacts...');
       const response = await contactAPI.getAll();
-      console.log('Réponse reçue:', response);
-      console.log('Response.data:', response.data);
-      console.log('Type de response.data:', typeof response.data);
-      console.log('Est un tableau?', Array.isArray(response.data));
       
-      // Le backend retourne directement un List<Contact>, Axios le met dans response.data
+      // Le backend doit toujours retourner un tableau
       if (Array.isArray(response.data)) {
         setContacts(response.data);
-        console.log(`${response.data.length} contact(s) chargé(s)`);
       } else {
-        // Si ce n'est pas un tableau, initialiser avec un tableau vide
-        console.warn('La réponse n\'est pas un tableau:', response.data);
-        setContacts([]);
-        if (response.data) {
-          console.warn('Données reçues mais non-tableau, conversion...');
-          // Essayer de convertir si possible
-          setContacts([response.data]);
+        // Format inattendu - logger en dev et initialiser vide
+        if (process.env.NODE_ENV === 'development') {
+          console.error('Format de réponse invalide, tableau attendu:', response.data);
         }
+        setContacts([]);
+        setError('Erreur de format des données');
       }
     } catch (err) {
-      console.error('Erreur détaillée lors du chargement des contacts:', err);
-      console.error('Status:', err.response?.status);
-      console.error('Data:', err.response?.data);
-      console.error('Headers:', err.response?.headers);
+      if (process.env.NODE_ENV === 'development') {
+        console.error('Erreur lors du chargement des contacts:', err);
+      }
       
       if (err.response?.status === 401) {
         // 401 errors are handled by the API interceptor, but we should still clear error
@@ -100,14 +94,16 @@ const ContactList = () => {
   };
 
   const handleSearch = async (query, searchType) => {
-    if (!query) {
+    if (!query.trim()) {
       setSearchResults([]);
       setIsSearching(false);
+      setError('');
       return;
     }
 
     try {
       setIsSearching(true);
+      setError('');
       let response;
       
       switch (searchType) {
@@ -121,9 +117,9 @@ const ContactList = () => {
           response = await contactAPI.searchByPhone(query);
           break;
         case 'group':
-          // Recherche locale par nom de groupe
           const filteredByGroup = contacts.filter(contact => 
-            contact.group && contact.group.name.toLowerCase().includes(query.toLowerCase())
+            contact.group && 
+            contact.group.name.toLowerCase().includes(query.toLowerCase())
           );
           setSearchResults(filteredByGroup);
           return;
@@ -131,10 +127,18 @@ const ContactList = () => {
           response = await contactAPI.search(query);
       }
       
-      setSearchResults(response.data);
+      if (response.data && Array.isArray(response.data)) {
+        setSearchResults(response.data);
+        if (response.data.length === 0) {
+          setError('Aucun contact trouvé');
+        }
+      } else {
+        setSearchResults([]);
+        setError('Format de réponse invalide');
+      }
     } catch (err) {
       setSearchResults([]);
-      setError('Aucun contact trouvé');
+      setError('Erreur lors de la recherche');
     }
   };
 

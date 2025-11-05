@@ -59,8 +59,40 @@ const ContactForm = () => {
     });
   };
 
+  const validateForm = () => {
+    if (!formData.firstName.trim()) {
+      return 'Le prénom est requis';
+    }
+    if (!formData.lastName.trim()) {
+      return 'Le nom est requis';
+    }
+    if (!formData.phoneNumber.trim()) {
+      return 'Le numéro de téléphone est requis';
+    }
+    
+    // Validation format téléphone (simple)
+    const phoneRegex = /^[0-9+\-\s()]{10,}$/;
+    if (!phoneRegex.test(formData.phoneNumber.replace(/\s/g, ''))) {
+      return 'Numéro de téléphone invalide';
+    }
+    
+    // Validation email optionnelle
+    if (formData.email && !/\S+@\S+\.\S+/.test(formData.email)) {
+      return 'Email invalide';
+    }
+    
+    return null;
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
+    
+    const validationError = validateForm();
+    if (validationError) {
+      setError(validationError);
+      return;
+    }
+    
     setLoading(true);
     setError('');
 
