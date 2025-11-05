@@ -35,8 +35,8 @@ spec:
     spec:
       containers:
         - name: backend
-          image: projetdevops-backend:latest
-          imagePullPolicy: Never
+          image: kvill0780/phone-book-backend:latest
+          imagePullPolicy: Always
           ports:
             - containerPort: 8080
           env:

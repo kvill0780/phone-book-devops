@@ -28,8 +28,8 @@ spec:
     spec:
       containers:
         - name: frontend
-          image: projetdevops-frontend:latest
-          imagePullPolicy: Never
+          image: kvill0780/phone-book-frontend:latest
+          imagePullPolicy: Always
           ports:
             - containerPort: 80
           livenessProbe:

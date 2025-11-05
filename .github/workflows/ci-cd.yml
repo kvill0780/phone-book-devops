@@ -8,8 +8,8 @@ on:
 
 env:
   DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
-  BACKEND_IMAGE: kvill/phone-book-backend
-  FRONTEND_IMAGE: kvill/phone-book-frontend
+  BACKEND_IMAGE: kvill0780/phone-book-backend
+  FRONTEND_IMAGE: kvill0780/phone-book-frontend
 
 jobs:
   test-backend:
