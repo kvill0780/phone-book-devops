@@ -41,10 +41,10 @@ sleep 30
 
 ```bash
 # Voir les conteneurs
-docker-compose ps
+docker compose ps
 
 # Voir les logs
-docker-compose logs -f backend
+docker compose logs -f backend
 
 # Tester l'API
 curl http://localhost:8080/actuator/health
@@ -95,16 +95,16 @@ echo "$(minikube ip) phone-book.local" | sudo tee -a /etc/hosts
 ### Docker Compose
 ```bash
 # Arrêter
-docker-compose down
+docker compose down
 
 # Redémarrer un service
-docker-compose restart backend
+docker compose restart backend
 
 # Voir les logs
-docker-compose logs -f
+docker compose logs -f
 
 # Nettoyer
-docker-compose down -v
+docker compose down -v
 ```
 
 ### Kubernetes
@@ -127,7 +127,7 @@ kubectl delete namespace phone-book
 ### Backend ne démarre pas
 ```bash
 # Vérifier MySQL est prêt
-docker-compose logs mysql
+docker compose logs mysql
 
 # Vider le cache Redis
 docker exec phone-book-redis redis-cli FLUSHALL
@@ -136,10 +136,10 @@ docker exec phone-book-redis redis-cli FLUSHALL
 ### Frontend ne charge pas
 ```bash
 # Vérifier les logs
-docker-compose logs frontend
+docker compose logs frontend
 
 # Reconstruire
-docker-compose up -d --build frontend
+docker compose up -d --build frontend
 ```
 
 ### Port déjà utilisé
@@ -178,7 +178,7 @@ docker-compose up -d --build frontend
 ## 🆘 Support
 
 En cas de problème:
-1. Vérifier les logs: `docker-compose logs`
-2. Vérifier les ports: `docker-compose ps`
+1. Vérifier les logs: `docker compose logs`
+2. Vérifier les ports: `docker compose ps`
 3. Nettoyer et redémarrer: `docker-compose down -v && docker-compose up -d`
 4. Consulter [ANNEXES.md](ANNEXES.md) section Troubleshooting

@@ -67,9 +67,10 @@ echo "admin" > secrets/grafana_password.txt
 docker-compose up -d
 
 # Accéder à l'application
-# Frontend: http://localhost:3000
+# Frontend: http://localhost:8000
 # Backend API: http://localhost:8080/api
-# Grafana: http://localhost:3001
+# Grafana: http://localhost:3000
+# Prometheus: http://localhost:9090
 ```
 
 ### 2. Déploiement Kubernetes
