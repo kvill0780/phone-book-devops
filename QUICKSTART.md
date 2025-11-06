@@ -11,7 +11,7 @@
 ### 1. Cloner le projet
 
 ```bash
-git clone https://github.com/kvill0780-droid/phone-book-devops.git
+git clone https://github.com/kvill0780/phone-book-devops.git
 cd phone-book-devops
 ```
 

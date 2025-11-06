@@ -55,7 +55,7 @@ Application de gestion de contacts avec architecture microservices, déployée s
 
 ```bash
 # Cloner le repository
-git clone https://github.com/kvill/phone-book.git
+git clone https://github.com/kvill0780/phone-book-devops.git
 cd phone-book
 
 # Créer les fichiers de secrets
