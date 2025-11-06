@@ -259,13 +259,30 @@ kubectl get endpoints -n phone-book
 4. Push vers la branche (`git push origin feature/AmazingFeature`)
 5. Ouvrir une Pull Request
 
-## 📝 Rapport Technique
+## 📝 Documentation Complète
 
-Voir [RAPPORT.md](RAPPORT.md) pour le rapport technique complet du projet.
+### Documents Principaux
+- **[INDEX.md](INDEX.md)** - Index de toute la documentation
+- **[RAPPORT.md](RAPPORT.md)** - Rapport technique complet (10 pages)
+- **[RESUME-EXECUTIF.md](RESUME-EXECUTIF.md)** - Synthèse pour la direction
+- **[QUICKSTART.md](QUICKSTART.md)** - Guide de démarrage rapide
+- **[PRESENTATION.md](PRESENTATION.md)** - Guide de présentation du projet
+
+### Guides Techniques
+- **[LIVRABLES.md](LIVRABLES.md)** - Validation des livrables
+- **[ANNEXES.md](ANNEXES.md)** - Annexes détaillées
+- **[GRAFANA-SCREENSHOTS.md](GRAFANA-SCREENSHOTS.md)** - Guide captures Grafana
+- **[CICD-STATUS.md](CICD-STATUS.md)** - État du pipeline CI/CD
+- **[GITHUB-SETUP.md](GITHUB-SETUP.md)** - Configuration GitHub
+
+### Parcours Recommandés
+1. **Démarrage rapide** : README → QUICKSTART → `docker-compose up`
+2. **Compréhension** : README → RAPPORT → ANNEXES
+3. **Présentation** : RESUME-EXECUTIF → PRESENTATION → LIVRABLES
 
 ## 👥 Auteurs
 
-- **Votre Nom** - Ingénieur DevOps Junior
+- **Étudiant MIAGE L3** - Ingénieur DevOps Junior
 
 ## 📄 Licence
 

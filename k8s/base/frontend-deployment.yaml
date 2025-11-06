@@ -29,7 +29,7 @@ spec:
       containers:
         - name: frontend
           image: kvill0780/phone-book-frontend:latest
-          imagePullPolicy: Always
+          imagePullPolicy: IfNotPresent
           ports:
             - containerPort: 80
           livenessProbe:
