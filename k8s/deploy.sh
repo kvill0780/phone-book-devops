@@ -33,13 +33,25 @@ echo "🔴 Deploying Redis..."
 kubectl apply -f base/redis-deployment.yaml
 
 echo "⏳ Waiting for database to be ready..."
-kubectl wait --for=condition=ready pod -l app=mysql -n phone-book --timeout=120s
+if ! kubectl wait --for=condition=ready pod -l app=mysql -n phone-book --timeout=180s; then
+    echo "❌ MySQL failed to start. Check logs:"
+    kubectl logs -l app=mysql -n phone-book --tail=50
+    exit 1
+fi
 
 echo "🔧 Deploying Backend..."
 kubectl apply -f base/backend-deployment.yaml
+if [ $? -ne 0 ]; then
+    echo "❌ Backend deployment failed"
+    exit 1
+fi
 
 echo "🎨 Deploying Frontend..."
 kubectl apply -f base/frontend-deployment.yaml
+if [ $? -ne 0 ]; then
+    echo "❌ Frontend deployment failed"
+    exit 1
+fi
 
 echo "📊 Deploying Prometheus..."
 kubectl apply -f base/prometheus-deployment.yaml
@@ -60,8 +72,23 @@ kubectl apply -f base/redis-exporter-deployment.yaml
 echo "🌐 Creating Ingress..."
 kubectl apply -f base/ingress.yaml
 
-echo "📏 Creating HPA..."
-kubectl apply -f base/hpa.yaml
+echo "📏 Creating HPA (requires metrics-server)..."
+if kubectl get apiservice v1beta1.metrics.k8s.io &> /dev/null; then
+    kubectl apply -f base/hpa.yaml
+    echo "✅ HPA configured"
+else
+    echo "⚠️  metrics-server not found. HPA will not work."
+    echo "   Install: kubectl apply -f https://github.com/kubernetes-sigs/metrics-server/releases/latest/download/components.yaml"
+    echo "   Skipping HPA for now..."
+fi
+
+echo "🔒 Applying Network Policies (optional)..."
+if [ -f base/network-policies.yaml ]; then
+    kubectl apply -f base/network-policies.yaml
+    echo "✅ Network policies applied"
+else
+    echo "⚠️  network-policies.yaml not found, skipping..."
+fi
 
 echo ""
 echo "✅ Deployment complete!"
