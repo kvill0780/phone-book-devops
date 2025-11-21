@@ -61,7 +61,7 @@ jobs:
         continue-on-error: true
         run: |
           cd phone-book-frontend
-          npm run lint || true
+          npm run lint || echo "Linter warnings ignored"
 
   build-backend:
     name: Build Backend
