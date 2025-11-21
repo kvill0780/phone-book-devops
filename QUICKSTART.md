@@ -31,6 +31,7 @@ open http://localhost:8000
 |---------|-----|-------------|
 | Frontend | http://localhost:8000 | - |
 | Backend API | http://localhost:8080/api | - |
+| **Swagger UI** | http://localhost:8080/swagger-ui.html | - |
 | Grafana | http://localhost:3000 | admin / admin |
 | Prometheus | http://localhost:9090 | - |
 

@@ -94,6 +94,8 @@ docker-compose down -v
 **Services disponibles** :
 - Backend : http://localhost:8080
 - Frontend : http://localhost:8000
+- **Swagger UI** : http://localhost:8080/swagger-ui.html
+- **API Docs** : http://localhost:8080/api-docs
 - MySQL : localhost:3306
 - Redis : localhost:6379
 - Prometheus : http://localhost:9090
