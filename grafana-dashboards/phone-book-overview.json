@@ -1,8 +1,11 @@
 {
   "dashboard": {
-    "title": "Phone Book - Overview",
-    "tags": ["phone-book", "overview"],
+    "title": "Phone Book - Application Overview",
+    "tags": ["phone-book", "spring-boot", "overview"],
     "timezone": "browser",
+    "schemaVersion": 38,
+    "version": 1,
+    "refresh": "5s",
     "panels": [
       {
         "id": 1,
@@ -11,21 +14,31 @@
         "gridPos": {"h": 8, "w": 12, "x": 0, "y": 0},
         "targets": [
           {
-            "expr": "rate(http_server_requests_seconds_count{application=\"phone-book\"}[5m])",
-            "legendFormat": "{{method}} {{uri}}"
+            "expr": "rate(http_server_requests_seconds_count{job=\"spring-boot\"}[5m])",
+            "legendFormat": "{{method}} {{uri}} - {{status}}",
+            "refId": "A"
           }
+        ],
+        "yaxes": [
+          {"format": "reqps", "label": "Requests/sec"},
+          {"format": "short"}
         ]
       },
       {
         "id": 2,
-        "title": "HTTP Response Time (p95)",
+        "title": "Response Time (p95)",
         "type": "graph",
         "gridPos": {"h": 8, "w": 12, "x": 12, "y": 0},
         "targets": [
           {
-            "expr": "histogram_quantile(0.95, rate(http_server_requests_seconds_bucket{application=\"phone-book\"}[5m]))",
-            "legendFormat": "{{method}} {{uri}}"
+            "expr": "histogram_quantile(0.95, rate(http_server_requests_seconds_bucket{job=\"spring-boot\"}[5m]))",
+            "legendFormat": "{{method}} {{uri}}",
+            "refId": "A"
           }
+        ],
+        "yaxes": [
+          {"format": "s", "label": "Response Time"},
+          {"format": "short"}
         ]
       },
       {
@@ -35,33 +48,152 @@
         "gridPos": {"h": 8, "w": 12, "x": 0, "y": 8},
         "targets": [
           {
-            "expr": "jvm_memory_used_bytes{application=\"phone-book\"}",
-            "legendFormat": "{{area}} - {{id}}"
+            "expr": "jvm_memory_used_bytes{job=\"spring-boot\",area=\"heap\"} / jvm_memory_max_bytes{job=\"spring-boot\",area=\"heap\"} * 100",
+            "legendFormat": "Heap Usage %",
+            "refId": "A"
           }
+        ],
+        "yaxes": [
+          {"format": "percent", "label": "Memory %", "max": 100},
+          {"format": "short"}
         ]
       },
       {
         "id": 4,
-        "title": "Active Pods",
+        "title": "Active Backend Pods",
         "type": "stat",
         "gridPos": {"h": 4, "w": 6, "x": 12, "y": 8},
         "targets": [
           {
-            "expr": "count(up{job=\"spring-boot\"} == 1)"
+            "expr": "count(up{job=\"spring-boot\"} == 1)",
+            "refId": "A"
           }
-        ]
+        ],
+        "options": {
+          "colorMode": "value",
+          "graphMode": "none",
+          "textMode": "value_and_name"
+        },
+        "fieldConfig": {
+          "defaults": {
+            "unit": "short",
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                {"value": 0, "color": "red"},
+                {"value": 1, "color": "yellow"},
+                {"value": 2, "color": "green"}
+              ]
+            }
+          }
+        }
       },
       {
         "id": 5,
-        "title": "Error Rate",
+        "title": "Error Rate (5xx)",
         "type": "stat",
         "gridPos": {"h": 4, "w": 6, "x": 18, "y": 8},
         "targets": [
           {
-            "expr": "rate(http_server_requests_seconds_count{status=~\"5..\"}[5m])"
+            "expr": "sum(rate(http_server_requests_seconds_count{job=\"spring-boot\",status=~\"5..\"}[5m]))",
+            "refId": "A"
           }
+        ],
+        "options": {
+          "colorMode": "value",
+          "graphMode": "area",
+          "textMode": "value"
+        },
+        "fieldConfig": {
+          "defaults": {
+            "unit": "reqps",
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                {"value": 0, "color": "green"},
+                {"value": 0.1, "color": "yellow"},
+                {"value": 1, "color": "red"}
+              ]
+            }
+          }
+        }
+      },
+      {
+        "id": 6,
+        "title": "Database Connections",
+        "type": "graph",
+        "gridPos": {"h": 8, "w": 12, "x": 12, "y": 12},
+        "targets": [
+          {
+            "expr": "mysql_global_status_threads_connected",
+            "legendFormat": "MySQL Connections",
+            "refId": "A"
+          },
+          {
+            "expr": "redis_connected_clients",
+            "legendFormat": "Redis Clients",
+            "refId": "B"
+          }
+        ],
+        "yaxes": [
+          {"format": "short", "label": "Connections"},
+          {"format": "short"}
         ]
+      },
+      {
+        "id": 7,
+        "title": "JVM Threads",
+        "type": "graph",
+        "gridPos": {"h": 8, "w": 12, "x": 0, "y": 16},
+        "targets": [
+          {
+            "expr": "jvm_threads_live{job=\"spring-boot\"}",
+            "legendFormat": "Live Threads",
+            "refId": "A"
+          },
+          {
+            "expr": "jvm_threads_daemon{job=\"spring-boot\"}",
+            "legendFormat": "Daemon Threads",
+            "refId": "B"
+          }
+        ],
+        "yaxes": [
+          {"format": "short", "label": "Threads"},
+          {"format": "short"}
+        ]
+      },
+      {
+        "id": 8,
+        "title": "Redis Cache Hit Ratio",
+        "type": "gauge",
+        "gridPos": {"h": 8, "w": 12, "x": 12, "y": 16},
+        "targets": [
+          {
+            "expr": "redis_keyspace_hits_total / (redis_keyspace_hits_total + redis_keyspace_misses_total) * 100",
+            "refId": "A"
+          }
+        ],
+        "options": {
+          "showThresholdLabels": false,
+          "showThresholdMarkers": true
+        },
+        "fieldConfig": {
+          "defaults": {
+            "unit": "percent",
+            "min": 0,
+            "max": 100,
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                {"value": 0, "color": "red"},
+                {"value": 50, "color": "yellow"},
+                {"value": 80, "color": "green"}
+              ]
+            }
+          }
+        }
       }
     ]
-  }
+  },
+  "overwrite": true
 }

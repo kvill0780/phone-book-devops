@@ -1,0 +1,215 @@
+{
+  "dashboard": {
+    "title": "Phone Book - Database Monitoring",
+    "tags": ["phone-book", "mysql", "redis", "database"],
+    "timezone": "browser",
+    "schemaVersion": 38,
+    "version": 1,
+    "refresh": "10s",
+    "panels": [
+      {
+        "id": 1,
+        "title": "MySQL Connections",
+        "type": "graph",
+        "gridPos": {"h": 8, "w": 12, "x": 0, "y": 0},
+        "targets": [
+          {
+            "expr": "mysql_global_status_threads_connected",
+            "legendFormat": "Connected",
+            "refId": "A"
+          },
+          {
+            "expr": "mysql_global_status_threads_running",
+            "legendFormat": "Running",
+            "refId": "B"
+          }
+        ],
+        "yaxes": [
+          {"format": "short", "label": "Connections"},
+          {"format": "short"}
+        ]
+      },
+      {
+        "id": 2,
+        "title": "MySQL Queries Rate",
+        "type": "graph",
+        "gridPos": {"h": 8, "w": 12, "x": 12, "y": 0},
+        "targets": [
+          {
+            "expr": "rate(mysql_global_status_queries[5m])",
+            "legendFormat": "Queries/sec",
+            "refId": "A"
+          },
+          {
+            "expr": "rate(mysql_global_status_slow_queries[5m])",
+            "legendFormat": "Slow Queries/sec",
+            "refId": "B"
+          }
+        ],
+        "yaxes": [
+          {"format": "qps", "label": "Queries/sec"},
+          {"format": "short"}
+        ]
+      },
+      {
+        "id": 3,
+        "title": "MySQL Uptime",
+        "type": "stat",
+        "gridPos": {"h": 4, "w": 6, "x": 0, "y": 8},
+        "targets": [
+          {
+            "expr": "mysql_global_status_uptime",
+            "refId": "A"
+          }
+        ],
+        "options": {
+          "colorMode": "value",
+          "graphMode": "none",
+          "textMode": "value"
+        },
+        "fieldConfig": {
+          "defaults": {
+            "unit": "s"
+          }
+        }
+      },
+      {
+        "id": 4,
+        "title": "MySQL Bytes Sent",
+        "type": "stat",
+        "gridPos": {"h": 4, "w": 6, "x": 6, "y": 8},
+        "targets": [
+          {
+            "expr": "rate(mysql_global_status_bytes_sent[5m])",
+            "refId": "A"
+          }
+        ],
+        "options": {
+          "colorMode": "value",
+          "graphMode": "area",
+          "textMode": "value"
+        },
+        "fieldConfig": {
+          "defaults": {
+            "unit": "Bps"
+          }
+        }
+      },
+      {
+        "id": 5,
+        "title": "Redis Connected Clients",
+        "type": "graph",
+        "gridPos": {"h": 8, "w": 12, "x": 12, "y": 8},
+        "targets": [
+          {
+            "expr": "redis_connected_clients",
+            "legendFormat": "Connected Clients",
+            "refId": "A"
+          },
+          {
+            "expr": "redis_blocked_clients",
+            "legendFormat": "Blocked Clients",
+            "refId": "B"
+          }
+        ],
+        "yaxes": [
+          {"format": "short", "label": "Clients"},
+          {"format": "short"}
+        ]
+      },
+      {
+        "id": 6,
+        "title": "Redis Memory Usage",
+        "type": "graph",
+        "gridPos": {"h": 8, "w": 12, "x": 0, "y": 12},
+        "targets": [
+          {
+            "expr": "redis_memory_used_bytes",
+            "legendFormat": "Used Memory",
+            "refId": "A"
+          },
+          {
+            "expr": "redis_memory_max_bytes",
+            "legendFormat": "Max Memory",
+            "refId": "B"
+          }
+        ],
+        "yaxes": [
+          {"format": "bytes", "label": "Memory"},
+          {"format": "short"}
+        ]
+      },
+      {
+        "id": 7,
+        "title": "Redis Operations Rate",
+        "type": "graph",
+        "gridPos": {"h": 8, "w": 12, "x": 12, "y": 12},
+        "targets": [
+          {
+            "expr": "rate(redis_commands_processed_total[5m])",
+            "legendFormat": "Commands/sec",
+            "refId": "A"
+          }
+        ],
+        "yaxes": [
+          {"format": "ops", "label": "Operations/sec"},
+          {"format": "short"}
+        ]
+      },
+      {
+        "id": 8,
+        "title": "Redis Keyspace",
+        "type": "stat",
+        "gridPos": {"h": 4, "w": 6, "x": 0, "y": 20},
+        "targets": [
+          {
+            "expr": "redis_db_keys",
+            "refId": "A"
+          }
+        ],
+        "options": {
+          "colorMode": "value",
+          "graphMode": "area",
+          "textMode": "value_and_name"
+        },
+        "fieldConfig": {
+          "defaults": {
+            "unit": "short"
+          }
+        }
+      },
+      {
+        "id": 9,
+        "title": "Redis Hit Rate",
+        "type": "gauge",
+        "gridPos": {"h": 4, "w": 6, "x": 6, "y": 20},
+        "targets": [
+          {
+            "expr": "redis_keyspace_hits_total / (redis_keyspace_hits_total + redis_keyspace_misses_total) * 100",
+            "refId": "A"
+          }
+        ],
+        "options": {
+          "showThresholdLabels": false,
+          "showThresholdMarkers": true
+        },
+        "fieldConfig": {
+          "defaults": {
+            "unit": "percent",
+            "min": 0,
+            "max": 100,
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                {"value": 0, "color": "red"},
+                {"value": 50, "color": "yellow"},
+                {"value": 80, "color": "green"}
+              ]
+            }
+          }
+        }
+      }
+    ]
+  },
+  "overwrite": true
+}
