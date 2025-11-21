@@ -136,33 +136,15 @@ jobs:
           format: 'sarif'
           output: 'trivy-frontend-results.sarif'
 
-  deploy:
-    name: Deploy to Kubernetes
-    needs: [build-backend, build-frontend]
-    runs-on: ubuntu-latest
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-    steps:
-      - uses: actions/checkout@v4
-      
-      - name: Configure kubectl
-        if: ${{ secrets.KUBE_CONFIG != '' }}
-        run: |
-          mkdir -p $HOME/.kube
-          echo "${{ secrets.KUBE_CONFIG }}" | base64 -d > $HOME/.kube/config
-      
-      - name: Update image tags in manifests
-        run: |
-          cd k8s/base
-          sed -i "s|\${IMAGE_TAG}|${{ github.sha }}|g" backend-deployment.yaml
-          sed -i "s|\${IMAGE_TAG}|${{ github.sha }}|g" frontend-deployment.yaml
-      
-      - name: Deploy to Kubernetes
-        run: |
-          cd k8s
-          ./deploy.sh
-      
-      - name: Verify deployment
-        run: |
-          kubectl rollout status deployment/backend -n phone-book --timeout=5m
-          kubectl rollout status deployment/frontend -n phone-book --timeout=5m
-          kubectl get pods -n phone-book
+  # deploy:
+  #   name: Deploy to Kubernetes
+  #   needs: [build-backend, build-frontend]
+  #   runs-on: ubuntu-latest
+  #   if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+  #   steps:
+  #     - uses: actions/checkout@v4
+  #     
+  #     - name: Deploy to Kubernetes
+  #       run: |
+  #         echo "Kubernetes deployment skipped - configure KUBE_CONFIG secret to enable"
+  #     # Uncomment and configure KUBE_CONFIG secret in GitHub to enable auto-deploy
