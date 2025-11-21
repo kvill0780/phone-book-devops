@@ -23,8 +23,16 @@ public class RateLimitingFilter extends OncePerRequestFilter {
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
             throws ServletException, IOException {
 
-        String clientIp = getClientIp(request);
         String endpoint = request.getRequestURI();
+        
+        // Skip rate limiting for Swagger/OpenAPI endpoints
+        if (endpoint.startsWith("/swagger-ui") || endpoint.startsWith("/api-docs") || 
+            endpoint.startsWith("/v3/api-docs") || endpoint.equals("/swagger-ui.html")) {
+            filterChain.doFilter(request, response);
+            return;
+        }
+
+        String clientIp = getClientIp(request);
 
         // Rate limiting plus strict pour les endpoints d'authentification
         Bucket bucket = getBucket(clientIp, endpoint);
