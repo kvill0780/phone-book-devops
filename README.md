@@ -35,16 +35,16 @@ docker compose up -d
 ┌─────────────────────────────────────────────┐
 │          KUBERNETES / DOCKER COMPOSE        │
 │                                             │
-│  ┌──────────┐  ┌──────────┐  ┌──────────┐  │
-│  │ Frontend │  │ Backend  │  │  MySQL   │  │
-│  │  React   │  │  Spring  │  │   8.0    │  │
-│  │  x2      │  │  x2      │  │   x1     │  │
-│  └──────────┘  └──────────┘  └──────────┘  │
+│  ┌──────────┐  ┌──────────┐  ┌──────────┐   │
+│  │ Frontend │  │ Backend  │  │  MySQL   │   │
+│  │  React   │  │  Spring  │  │   8.0    │   │
+│  │  x2      │  │  x2      │  │   x1     │   │
+│  └──────────┘  └──────────┘  └──────────┘   │
 │                                             │
-│  ┌──────────┐  ┌───────────┐  ┌──────────┐ │
-│  │  Redis   │  │Prometheus │  │ Grafana  │ │
-│  │  Cache   │  │ Metrics   │  │Dashboard │ │
-│  └──────────┘  └───────────┘  └──────────┘ │
+│  ┌──────────┐  ┌───────────┐  ┌──────────┐  │
+│  │  Redis   │  │Prometheus │  │ Grafana  │  │
+│  │  Cache   │  │ Metrics   │  │Dashboard │  │
+│  └──────────┘  └───────────┘  └──────────┘  │
 └─────────────────────────────────────────────┘
 ```
 
@@ -58,22 +58,148 @@ docker compose up -d
 
 ## 🔄 CI/CD Pipeline
 
-Le pipeline GitHub Actions s'exécute automatiquement sur chaque push :
+### Architecture du Pipeline
+
+Le pipeline GitHub Actions s'exécute automatiquement sur chaque push/pull request :
 
 ```
-Push → Tests → Build Docker → Security Scan → Deploy
+┌──────────────────────────────────────────────────────────┐
+│                    GITHUB ACTIONS WORKFLOW               │
+├──────────────────────────────────────────────────────────┤
+│                                                          │
+│  Trigger: push/pull_request sur main                     │
+│           ↓                                              │
+│  ┌──────────────────┐  ┌──────────────────┐              │
+│  │  test-backend    │  │  test-frontend   │              │
+│  │  (Maven tests)   │  │  (npm tests)     │              │
+│  └────────┬─────────┘  └────────┬─────────┘              │
+│           └──────────┬───────────┘                       │
+│                      ↓                                   │
+│  ┌──────────────────┐  ┌──────────────────┐              │
+│  │  build-backend   │  │  build-frontend  │              │
+│  │  (Docker image)  │  │  (Docker image)  │              │
+│  └────────┬─────────┘  └────────┬─────────┘              │
+│           └──────────┬───────────┘                       │
+│                      ↓                                   │
+│           ┌──────────────────┐                           │
+│           │  security-scan   │                           │
+│           │  (Trivy)         │                           │
+│           └──────────────────┘                           │
+│                      ↓                                   │
+│           ┌──────────────────┐                           │
+│           │  Push to Docker  │                           │
+│           │  Hub (latest +   │                           │
+│           │  SHA tag)        │                           │
+│           └──────────────────┘                           │
+└──────────────────────────────────────────────────────────┘
 ```
 
-**Jobs** :
-1. ✅ Test Backend (Maven)
-2. ✅ Test Frontend (npm)
-3. ✅ Build Backend (Docker)
-4. ✅ Build Frontend (Docker)
-5. ✅ Security Scan (Trivy)
+### Logique Détaillée du Pipeline
 
-**Configuration** : Ajoutez ces secrets GitHub pour activer le pipeline complet :
-- `DOCKER_USERNAME` : Votre username Docker Hub
-- `DOCKER_PASSWORD` : Token d'accès Docker Hub
+#### 1. **Déclencheurs (Triggers)**
+```yaml
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+```
+- **Push sur main** : Exécute le pipeline complet (test → build → scan → push)
+- **Pull Request** : Exécute tests et build pour validation avant merge
+
+#### 2. **Job: test-backend**
+```yaml
+runs-on: ubuntu-latest
+steps:
+  1. Checkout du code
+  2. Setup Java 21
+  3. Cache Maven dependencies (~/.m2/repository)
+  4. Exécution: mvn clean test
+  5. Upload des rapports de tests (artifacts)
+```
+**Objectif** : Valider que tous les tests unitaires backend passent (15 tests)
+
+#### 3. **Job: test-frontend**
+```yaml
+runs-on: ubuntu-latest
+steps:
+  1. Checkout du code
+  2. Setup Node.js 20
+  3. Cache npm dependencies
+  4. Installation: npm install --legacy-peer-deps
+  5. Exécution: npm test
+```
+**Objectif** : Valider la syntaxe et les dépendances frontend
+
+#### 4. **Job: build-backend**
+```yaml
+needs: test-backend  # Attend la réussite des tests
+steps:
+  1. Checkout du code
+  2. Login Docker Hub (secrets)
+  3. Setup Docker Buildx (multi-platform)
+  4. Build image: kvill0780/phone-book-backend:latest
+  5. Tag avec SHA: kvill0780/phone-book-backend:${{ github.sha }}
+  6. Push vers Docker Hub
+```
+**Objectif** : Créer l'image Docker backend et la publier avec 2 tags (latest + commit SHA)
+
+#### 5. **Job: build-frontend**
+```yaml
+needs: test-frontend
+steps:
+  1. Checkout du code
+  2. Login Docker Hub
+  3. Build image: kvill0780/phone-book-frontend:latest
+  4. Tag avec SHA
+  5. Push vers Docker Hub
+```
+**Objectif** : Créer l'image Docker frontend et la publier
+
+#### 6. **Job: security-scan**
+```yaml
+needs: [build-backend, build-frontend]
+steps:
+  1. Checkout du code
+  2. Pull des images depuis Docker Hub
+  3. Scan Trivy backend (vulnérabilités HIGH/CRITICAL)
+  4. Scan Trivy frontend
+  5. Upload des rapports SARIF vers GitHub Security
+```
+**Objectif** : Détecter les vulnérabilités de sécurité dans les images Docker
+
+### Stratégie de Tagging
+
+- **`latest`** : Toujours la dernière version stable sur main
+- **`${{ github.sha }}`** : Tag unique par commit (traçabilité, rollback)
+
+### Secrets GitHub Requis
+
+| Secret | Description | Utilisation |
+|--------|-------------|-------------|
+| `DOCKER_USERNAME` | Username Docker Hub | Authentification pour push images |
+| `DOCKER_PASSWORD` | Token Docker Hub | Authentification sécurisée |
+
+**Configuration** :
+```bash
+# Dans GitHub: Settings → Secrets and variables → Actions → New repository secret
+DOCKER_USERNAME=kvill0780
+DOCKER_PASSWORD=<votre_token_dockerhub>
+```
+
+### Optimisations du Pipeline
+
+1. **Cache Maven/npm** : Réduit le temps de build de 3-4 minutes à ~1 minute
+2. **Jobs parallèles** : test-backend et test-frontend s'exécutent simultanément
+3. **Docker Buildx** : Support multi-platform (amd64, arm64)
+4. **Artifacts** : Conservation des rapports de tests pendant 7 jours
+
+### Monitoring du Pipeline
+
+- **Badge CI/CD** : ![CI/CD](https://github.com/kvill0780/phone-book-devops/actions/workflows/ci-cd.yml/badge.svg)
+- **GitHub Actions** : Onglet "Actions" pour voir l'historique
+- **Durée moyenne** : ~5-7 minutes pour un pipeline complet
+- **Taux de succès** : Visible dans l'historique des workflows
 
 ## 🐳 Docker Compose (Développement Local)
 
