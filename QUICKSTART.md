@@ -1,152 +1,170 @@
-# ⚡ Démarrage Rapide - 3 Minutes
+# ⚡ Quick Start - Phone Book DevOps
 
-## Option 1 : Docker Compose (Développement Local)
+Démarrez l'application en **3 minutes** !
+
+## 🎯 Option 1 : Docker Compose (Recommandé)
+
+### Prérequis
+- Docker Desktop installé
+- Git
+
+### Étapes
 
 ```bash
-# 1. Cloner le repo
+# 1. Cloner
 git clone https://github.com/kvill0780/phone-book-devops.git
 cd phone-book-devops
 
-# 2. Lancer l'application
+# 2. Lancer
 docker-compose up -d
 
-# 3. Attendre que tout démarre (30-60s)
+# 3. Attendre 30 secondes que tout démarre
+sleep 30
+
+# 4. Accéder
+open http://localhost:8000
+```
+
+### URLs
+
+| Service | URL | Credentials |
+|---------|-----|-------------|
+| Frontend | http://localhost:8000 | - |
+| Backend API | http://localhost:8080/api | - |
+| Grafana | http://localhost:3000 | admin / admin |
+| Prometheus | http://localhost:9090 | - |
+
+### Vérification
+
+```bash
+# Voir les services
 docker-compose ps
 
-# 4. Accéder à l'application
-# Frontend:    http://localhost:8000
-# Backend API: http://localhost:8080/api
-# Grafana:     http://localhost:3000 (admin/admin)
-# Prometheus:  http://localhost:9090
+# Tous les services doivent être "Up" et "healthy"
 ```
 
-### Générer du trafic
-```bash
-./generate-traffic.sh
-```
-
-### Arrêter
-```bash
-docker-compose down -v
-```
-
----
-
-## Option 2 : Kubernetes (Production)
+## ☸️ Option 2 : Kubernetes (Minikube)
 
 ### Prérequis
-- Kubernetes cluster (minikube, kind, ou cloud)
-- kubectl configuré
+- Minikube installé
+- kubectl installé
 
-### Déploiement
+### Étapes
 
 ```bash
-# 1. Créer les secrets
-cd k8s
-./create-secrets.sh
-# ⚠️ Sauvegarder les mots de passe affichés !
+# 1. Cloner
+git clone https://github.com/kvill0780/phone-book-devops.git
+cd phone-book-devops
 
-# 2. Déployer
+# 2. Démarrer minikube
+minikube start --driver=docker
+minikube addons enable ingress
+
+# 3. Déployer
+cd k8s
+chmod +x create-secrets.sh deploy.sh
+./create-secrets.sh
 ./deploy.sh
 
-# 3. Vérifier
-kubectl get pods -n phone-book
-# Attendre que tous les pods soient "Running"
+# 4. Configurer l'accès
+echo "$(minikube ip) phone-book.local" | sudo tee -a /etc/hosts
 
-# 4. Accéder à l'application
-# Ajouter à /etc/hosts:
-echo "127.0.0.1 phone-book.local" | sudo tee -a /etc/hosts
-
-# Pour minikube:
-minikube addons enable ingress
-minikube tunnel  # Dans un terminal séparé
-
-# Application: http://phone-book.local
+# 5. Accéder
+open http://phone-book.local
 ```
 
-### Port-forwarding (alternative)
+### URLs
+
+| Service | URL | Credentials |
+|---------|-----|-------------|
+| Frontend | http://phone-book.local | - |
+| Grafana | http://phone-book.local/grafana | admin / admin |
+| Prometheus | http://phone-book.local/prometheus | - |
+
+### Vérification
+
 ```bash
-# Backend
-kubectl port-forward -n phone-book svc/backend 8080:8080
+# Voir les pods
+kubectl get pods -n phone-book
 
-# Frontend
-kubectl port-forward -n phone-book svc/frontend 8000:80
-
-# Grafana
-kubectl port-forward -n phone-book svc/grafana 3000:3000
+# Tous les pods doivent être "Running" et "1/1" ou "2/2"
 ```
 
-### Nettoyer
+## 🧪 Tester l'Application
+
+### Créer un compte
+1. Ouvrir http://localhost:8000 (ou http://phone-book.local)
+2. Cliquer sur "S'inscrire"
+3. Créer un compte : username / password
+4. Se connecter
+
+### Ajouter un contact
+1. Cliquer sur "Nouveau Contact"
+2. Remplir : Prénom, Nom, Téléphone
+3. Sauvegarder
+
+### Voir les métriques
+1. Ouvrir Grafana : http://localhost:3000
+2. Login : admin / admin
+3. Dashboard : "Phone Book - Application Overview"
+4. Voir les métriques en temps réel
+
+## 🛑 Arrêter l'Application
+
+### Docker Compose
+```bash
+docker-compose down
+```
+
+### Kubernetes
 ```bash
 kubectl delete namespace phone-book
+minikube stop
 ```
 
----
+## 🐛 Problèmes ?
 
-## 🔧 Configuration CI/CD
+### Docker Compose
 
-Pour activer le pipeline automatique :
-
-1. **Créer un compte Docker Hub** (si pas déjà fait)
-
-2. **Configurer les secrets GitHub** :
-   - Aller dans Settings → Secrets and variables → Actions
-   - Ajouter :
-     - `DOCKER_USERNAME` : votre username Docker Hub
-     - `DOCKER_PASSWORD` : créer un token sur https://hub.docker.com/settings/security
-
-3. **Push sur main** :
-   ```bash
-   git add .
-   git commit -m "feat: mon changement"
-   git push origin main
-   ```
-
-4. **Vérifier** : Onglet "Actions" sur GitHub
-
-📖 **Guide complet** : [.github/CICD-SETUP-GUIDE.md](.github/CICD-SETUP-GUIDE.md)
-
----
-
-## 📊 Monitoring
-
+**Erreur "port already in use"** :
 ```bash
-# Accéder à Grafana
-kubectl port-forward -n phone-book svc/grafana 3000:3000
-# http://localhost:3000 (admin/admin)
-
-# Dashboard pré-configuré : "Phone Book - Application Overview"
-
-# Générer du trafic pour voir les métriques
-./generate-traffic.sh
+# Changer les ports dans docker-compose.yml
+# Ou arrêter le service qui utilise le port
 ```
 
----
-
-## 🐛 Problèmes Courants
-
-### Les pods ne démarrent pas
+**Service ne démarre pas** :
 ```bash
+docker-compose logs <service-name>
+docker-compose restart <service-name>
+```
+
+### Kubernetes
+
+**Pods en "Pending"** :
+```bash
+# Vérifier les ressources
 kubectl describe pod <pod-name> -n phone-book
-kubectl logs <pod-name> -n phone-book
 ```
 
-### Erreur "ImagePullBackOff"
-- Vérifier que les images existent sur Docker Hub
-- Ou builder localement : `docker-compose build`
+**Ingress ne fonctionne pas** :
+```bash
+# Vérifier que l'addon est activé
+minikube addons list | grep ingress
+minikube addons enable ingress
+```
 
-### MySQL ne démarre pas
-- Augmenter les ressources du cluster
-- Vérifier les PVC : `kubectl get pvc -n phone-book`
+## 📚 Aller Plus Loin
 
-### Le pipeline CI/CD échoue
-- Vérifier que les secrets GitHub sont configurés
-- Voir [.github/CICD-SETUP-GUIDE.md](.github/CICD-SETUP-GUIDE.md)
+- **[README.md](README.md)** - Documentation complète
+- **[RAPPORT.md](RAPPORT.md)** - Rapport technique
 
----
+## 🎉 C'est Tout !
 
-## 📚 Documentation Complète
+Votre application Phone Book est maintenant opérationnelle avec :
+- ✅ Frontend React
+- ✅ Backend Spring Boot
+- ✅ Base de données MySQL
+- ✅ Cache Redis
+- ✅ Monitoring Prometheus + Grafana
 
-- **[README.md](README.md)** - Vue d'ensemble et architecture
-- **[RAPPORT.md](RAPPORT.md)** - Rapport technique détaillé
-- **[.github/CICD-SETUP-GUIDE.md](.github/CICD-SETUP-GUIDE.md)** - Configuration CI/CD
+**Bon développement ! 🚀**
