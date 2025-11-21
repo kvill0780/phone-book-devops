@@ -157,10 +157,10 @@ EXPOSE 80
 
 ### 3.3 Docker Compose pour le développement
 
-Le fichier `docker-compose.yml` permet de lancer l'application complète en local :
+Le fichier `docker compose.yml` permet de lancer l'application complète en local :
 
 ```bash
-docker-compose up -d
+docker compose up -d
 # Frontend: http://localhost:3000
 # Backend: http://localhost:8080
 # Grafana: http://localhost:3001
@@ -648,7 +648,7 @@ Ce projet a permis de transformer une application locale en une infrastructure D
 ### A. Captures d'écran requises
 
 #### 1. Docker Compose
-- `docker-compose ps` montrant tous les services "Up (healthy)"
+- `docker compose ps` montrant tous les services "Up (healthy)"
 - Frontend accessible dans le navigateur
 
 #### 2. Kubernetes
@@ -677,8 +677,8 @@ Ce projet a permis de transformer une application locale en une infrastructure D
 
 ```bash
 # Docker Compose
-docker-compose up -d
-docker-compose ps
+docker compose up -d
+docker compose ps
 curl http://localhost:8080/actuator/health
 
 # Kubernetes
@@ -699,7 +699,7 @@ projet-devops/
 ├── README.md                          # Documentation principale
 ├── RAPPORT.md                         # Ce rapport
 ├── QUICKSTART.md                      # Guide de démarrage
-├── docker-compose.yml                 # Environnement local
+├── docker compose.yml                 # Environnement local
 ├── .github/workflows/ci-cd.yml        # Pipeline CI/CD
 ├── k8s/
 │   ├── base/                          # Manifests Kubernetes

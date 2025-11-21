@@ -18,7 +18,7 @@ git clone https://github.com/kvill0780/phone-book-devops.git
 cd phone-book-devops
 
 # 2. Lancer avec Docker Compose
-docker-compose up -d
+docker compose up -d
 
 # 3. Accéder à l'application
 # Frontend: http://localhost:8000
@@ -79,16 +79,16 @@ Push → Tests → Build Docker → Security Scan → Deploy
 
 ```bash
 # Démarrer tous les services
-docker-compose up -d
+docker compose up -d
 
 # Voir les logs
-docker-compose logs -f
+docker compose logs -f
 
 # Arrêter
-docker-compose down
+docker compose down
 
 # Nettoyer tout (volumes inclus)
-docker-compose down -v
+docker compose down -v
 ```
 
 **Services disponibles** :
@@ -191,7 +191,7 @@ npm test
 
 ### Tests d'intégration (avec Docker Compose)
 ```bash
-docker-compose up -d
+docker compose up -d
 # Attendre 30s que tout démarre
 curl http://localhost:8080/actuator/health
 curl http://localhost:8000
@@ -223,7 +223,7 @@ kubectl get hpa -n phone-book
 ### Scaling manuel
 ```bash
 # Docker Compose
-docker-compose up -d --scale backend=3 --scale frontend=2
+docker compose up -d --scale backend=3 --scale frontend=2
 
 # Kubernetes
 kubectl scale deployment backend --replicas=5 -n phone-book
@@ -234,13 +234,13 @@ kubectl scale deployment backend --replicas=5 -n phone-book
 ### Docker Compose
 ```bash
 # Voir les logs d'un service
-docker-compose logs backend
+docker compose logs backend
 
 # Redémarrer un service
-docker-compose restart backend
+docker compose restart backend
 
 # Vérifier l'état
-docker-compose ps
+docker compose ps
 ```
 
 ### Kubernetes
@@ -262,8 +262,8 @@ kubectl describe ingress phone-book-ingress -n phone-book
 **MySQL ne démarre pas** :
 ```bash
 # Docker Compose
-docker-compose down -v  # Supprime les volumes
-docker-compose up -d
+docker compose down -v  # Supprime les volumes
+docker compose up -d
 
 # Kubernetes
 kubectl delete pvc mysql-pvc -n phone-book
@@ -271,11 +271,11 @@ kubectl delete pod mysql-0 -n phone-book
 ```
 
 **Backend ne se connecte pas à MySQL** :
-- Vérifier que MySQL est prêt : `docker-compose logs mysql`
+- Vérifier que MySQL est prêt : `docker compose logs mysql`
 - Attendre 30-60s après le démarrage de MySQL
 
 **Frontend ne charge pas** :
-- Vérifier les logs : `docker-compose logs frontend`
+- Vérifier les logs : `docker compose logs frontend`
 - Vérifier nginx.conf : backend doit être accessible
 
 ## 📝 Structure du Projet
@@ -296,7 +296,7 @@ phone-book-devops/
 │   ├── base/               # Deployments, Services, ConfigMaps
 │   ├── create-secrets.sh   # Génération secrets
 │   └── deploy.sh           # Script de déploiement
-├── docker-compose.yml      # Orchestration locale
+├── docker compose.yml      # Orchestration locale
 ├── prometheus.yml          # Config Prometheus
 ├── README.md              # Ce fichier
 ├── QUICKSTART.md          # Guide rapide

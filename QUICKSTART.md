@@ -16,7 +16,7 @@ git clone https://github.com/kvill0780/phone-book-devops.git
 cd phone-book-devops
 
 # 2. Lancer
-docker-compose up -d
+docker compose up -d
 
 # 3. Attendre 30 secondes que tout démarre
 sleep 30
@@ -39,7 +39,7 @@ open http://localhost:8000
 
 ```bash
 # Voir les services
-docker-compose ps
+docker compose ps
 
 # Tous les services doivent être "Up" et "healthy"
 ```
@@ -114,7 +114,7 @@ kubectl get pods -n phone-book
 
 ### Docker Compose
 ```bash
-docker-compose down
+docker compose down
 ```
 
 ### Kubernetes
@@ -129,14 +129,14 @@ minikube stop
 
 **Erreur "port already in use"** :
 ```bash
-# Changer les ports dans docker-compose.yml
+# Changer les ports dans docker compose.yml
 # Ou arrêter le service qui utilise le port
 ```
 
 **Service ne démarre pas** :
 ```bash
-docker-compose logs <service-name>
-docker-compose restart <service-name>
+docker compose logs <service-name>
+docker compose restart <service-name>
 ```
 
 ### Kubernetes
