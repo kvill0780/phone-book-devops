@@ -20,12 +20,12 @@ jobs:
       
       - name: Run tests
         run: |
-          cd spring-phone-book
+          cd phone-book-backend
           mvn clean test
       
       - name: Check code coverage
         run: |
-          cd spring-phone-book
+          cd phone-book-backend
           mvn verify
 
   frontend-checks:
@@ -68,7 +68,7 @@ jobs:
       - name: Build backend image
         uses: docker/build-push-action@v5
         with:
-          context: ./spring-phone-book
+          context: ./phone-book-backend
           push: false
           tags: phone-book-backend:test
       

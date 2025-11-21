@@ -12,7 +12,7 @@ jobs:
       
       - name: Build Backend
         run: |
-          cd spring-phone-book
+          cd phone-book-backend
           docker build -t projetdevops-backend:test .
       
       - name: Build Frontend
