@@ -27,13 +27,13 @@ jobs:
       
       - name: Run tests
         run: |
-          cd spring-phone-book
+          cd phone-book-backend
           mvn clean test
       
       - name: Generate test report
         if: always()
         run: |
-          cd spring-phone-book
+          cd phone-book-backend
           mvn surefire-report:report
 
   test-frontend:
@@ -80,7 +80,7 @@ jobs:
       - name: Build and push
         uses: docker/build-push-action@v5
         with:
-          context: ./spring-phone-book
+          context: ./phone-book-backend
           push: true
           tags: |
             ${{ env.BACKEND_IMAGE }}:latest
