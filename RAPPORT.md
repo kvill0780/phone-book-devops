@@ -55,14 +55,14 @@ L'entreprise disposait d'une application web de gestion de contacts fonctionnant
 
 ```
 ┌─────────────────────────────────────────────────────────┐
-│                  GITHUB REPOSITORY                       │
-│                                                          │
-│  Push Code → GitHub Actions → Build → Test → Deploy    │
+│                  GITHUB REPOSITORY                      │
+│                                                         │
+│  Push Code → GitHub Actions → Build → Test → Deploy     │
 └─────────────────────────────────────────────────────────┘
                             ↓
 ┌─────────────────────────────────────────────────────────┐
-│                 DOCKER HUB REGISTRY                      │
-│                                                          │
+│                 DOCKER HUB REGISTRY                     │
+│                                                         │
 │  kvill/phone-book-backend:latest                        │
 │  kvill/phone-book-frontend:latest                       │
 └─────────────────────────────────────────────────────────┘
