@@ -16,6 +16,7 @@ class MetricsServiceTest {
     void setUp() {
         meterRegistry = new SimpleMeterRegistry();
         metricsService = new MetricsService(meterRegistry);
+        metricsService.init();
     }
 
     @Test
