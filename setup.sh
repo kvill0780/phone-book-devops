@@ -21,7 +21,7 @@ fi
 
 if [ ! -f secrets/grafana_password.txt ]; then
     echo "🔐 Generating Grafana password..."
-    echo "admin" > secrets/grafana_password.txt
+    openssl rand -base64 16 > secrets/grafana_password.txt
 fi
 
 # Set proper permissions

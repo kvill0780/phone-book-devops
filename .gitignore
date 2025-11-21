@@ -1,9 +1,12 @@
-# Secrets
+# Secrets - NEVER COMMIT THESE!
 k8s/base/secrets.yaml
 secrets/
 *.pem
 *.key
+*.crt
 .env
+.env.local
+.env.production
 
 # IDE
 .idea/

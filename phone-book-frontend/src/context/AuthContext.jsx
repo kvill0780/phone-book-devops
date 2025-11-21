@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { authAPI } from '../services/api';
+import tokenService from '../services/tokenService';
 
 const AuthContext = createContext(null);
 
@@ -13,6 +14,8 @@ export const AuthProvider = ({ children }) => {
         const userData = localStorage.getItem('userData');
         if (userData) {
           const parsedData = JSON.parse(userData);
+          // initialize in-memory token for API interceptor
+          if (parsedData.token) tokenService.setToken(parsedData.token);
           setUser(parsedData);
         }
       } catch (error) {
@@ -38,6 +41,8 @@ export const AuthProvider = ({ children }) => {
           expiresIn: response.data.expiresIn,
         };
 
+        // keep storing userData for compatibility; initialize in-memory token store
+        tokenService.setToken(response.data.token);
         localStorage.setItem('userData', JSON.stringify(userData));
         setUser(userData);
         return { success: true, user: userData };
@@ -120,7 +125,8 @@ export const AuthProvider = ({ children }) => {
           refreshToken: response.data.refreshToken,
           expiresIn: response.data.expiresIn,
         };
-        
+        // update in-memory token and persisted user data
+        tokenService.setToken(response.data.token);
         localStorage.setItem('userData', JSON.stringify(newUserData));
         setUser(newUserData);
         
@@ -137,6 +143,7 @@ export const AuthProvider = ({ children }) => {
 
   const logout = () => {
     localStorage.removeItem('userData');
+    tokenService.clearToken();
     setUser(null);
   };
 

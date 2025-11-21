@@ -26,10 +26,9 @@ jobs:
           cache: maven
       
       - name: Run tests
-        continue-on-error: true
         run: |
           cd spring-phone-book
-          mvn clean test -Dmaven.test.failure.ignore=true
+          mvn clean test
       
       - name: Generate test report
         if: always()
@@ -59,13 +58,13 @@ jobs:
         continue-on-error: true
         run: |
           cd phone-book-frontend
-          npm run lint || echo "Linter warnings ignored"
+          npm run lint || true
 
   build-backend:
     name: Build Backend
     needs: test-backend
     runs-on: ubuntu-latest
-    if: false  # Désactivé temporairement - configurer DOCKER_USERNAME et DOCKER_PASSWORD d'abord
+    if: github.event_name == 'push'
     steps:
       - uses: actions/checkout@v4
       
@@ -93,7 +92,7 @@ jobs:
     name: Build Frontend
     needs: test-frontend
     runs-on: ubuntu-latest
-    if: false  # Désactivé temporairement - configurer DOCKER_USERNAME et DOCKER_PASSWORD d'abord
+    if: github.event_name == 'push'
     steps:
       - uses: actions/checkout@v4
       
@@ -141,7 +140,7 @@ jobs:
     name: Deploy to Kubernetes
     needs: [build-backend, build-frontend]
     runs-on: ubuntu-latest
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main' && secrets.KUBE_CONFIG != ''
     steps:
       - uses: actions/checkout@v4
       
@@ -150,6 +149,12 @@ jobs:
           mkdir -p $HOME/.kube
           echo "${{ secrets.KUBE_CONFIG }}" | base64 -d > $HOME/.kube/config
       
+      - name: Update image tags in manifests
+        run: |
+          cd k8s/base
+          sed -i "s|\${IMAGE_TAG}|${{ github.sha }}|g" backend-deployment.yaml
+          sed -i "s|\${IMAGE_TAG}|${{ github.sha }}|g" frontend-deployment.yaml
+      
       - name: Deploy to Kubernetes
         run: |
           cd k8s
@@ -157,6 +162,6 @@ jobs:
       
       - name: Verify deployment
         run: |
-          kubectl rollout status deployment/backend -n phone-book
-          kubectl rollout status deployment/frontend -n phone-book
+          kubectl rollout status deployment/backend -n phone-book --timeout=5m
+          kubectl rollout status deployment/frontend -n phone-book --timeout=5m
           kubectl get pods -n phone-book

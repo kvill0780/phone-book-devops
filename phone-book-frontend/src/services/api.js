@@ -1,4 +1,5 @@
 import axios from 'axios';
+import tokenService from './tokenService';
 
 const API_BASE_URL = process.env.NODE_ENV === 'production' 
   ? '/api' 
@@ -31,18 +32,12 @@ api.interceptors.request.use((config) => {
     return config;
   }
   
-  const userData = localStorage.getItem('userData');
-  
-  if (userData) {
-    try {
-      const user = JSON.parse(userData);
-      if (user.token) {
-        config.headers.Authorization = `Bearer ${user.token}`;
-      }
-    } catch (error) {
-      console.error('Erreur lors du parsing de userData:', error);
-      localStorage.removeItem('userData');
-    }
+  // Prefer reading the token from the in-memory tokenService for performance and
+  // to centralize access. For compatibility the app still persists userData in
+  // localStorage; tokenService is initialized at app startup in AuthContext.
+  const token = tokenService.getToken();
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`;
   }
   
   return config;
@@ -81,7 +76,9 @@ api.interceptors.response.use(
                 expiresIn: refreshResponse.data.expiresIn,
               };
               
+              // update persisted user and in-memory token
               localStorage.setItem('userData', JSON.stringify(newUserData));
+              tokenService.setToken(refreshResponse.data.token);
               originalRequest.headers.Authorization = `Bearer ${refreshResponse.data.token}`;
               
               return api(originalRequest);

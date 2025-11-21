@@ -372,7 +372,51 @@ Application → Prometheus → Grafana → Dashboards
 - Network traffic
 - Pod restarts
 
-### 6.4 Alerting (Perspectives)
+### 6.4 Configuration des Dashboards
+
+Les dashboards Grafana sont **auto-provisionnés** au démarrage via ConfigMaps :
+
+```yaml
+# k8s/base/grafana-datasources-configmap.yaml
+apiVersion: 1
+datasources:
+  - name: Prometheus
+    type: prometheus
+    url: http://prometheus:9090
+    isDefault: true
+```
+
+Dashboard pré-configuré : **"Phone Book - Application Overview"**
+- Accessible immédiatement après le déploiement
+- Pas de configuration manuelle requise
+- Datasource Prometheus déjà connectée
+
+**Pour générer des métriques** :
+```bash
+./generate-traffic.sh
+```
+
+### 6.5 Exporters pour MySQL et Redis
+
+Ajout de **MySQL Exporter** et **Redis Exporter** pour exposer les métriques :
+
+```yaml
+# MySQL Exporter (port 9104)
+image: prom/mysqld-exporter:latest
+env:
+  - name: DATA_SOURCE_NAME
+    value: "user:password@tcp(mysql:3306)/"
+
+# Redis Exporter (port 9121)
+image: oliver006/redis_exporter:latest
+env:
+  - name: REDIS_ADDR
+    value: "redis:6379"
+```
+
+**Résultat** : Prometheus scrape automatiquement les métriques MySQL et Redis
+
+### 6.6 Alerting (Perspectives)
 
 ```yaml
 # Exemple d'alerte Prometheus
@@ -437,6 +481,21 @@ Application → Prometheus → Grafana → Dashboards
 - TTL différencié par type de données
 
 **Résultat** : Temps de réponse réduit à 50ms (10x plus rapide)
+
+### 7.5 Problème : Métriques MySQL/Redis manquantes
+
+**Symptôme** : Prometheus ne collecte pas les métriques MySQL et Redis
+
+**Cause** : MySQL et Redis n'exposent pas nativement de métriques Prometheus
+
+**Solution** :
+- Ajout de **MySQL Exporter** (prom/mysqld-exporter)
+- Ajout de **Redis Exporter** (oliver006/redis_exporter)
+- Configuration Prometheus pour scraper les exporters
+
+**Résultat** : Métriques complètes dans Grafana (connexions, requêtes, cache hit ratio)
+
+**Temps de résolution** : 1 heure
 
 ---
 
@@ -582,11 +641,77 @@ Ce projet a permis de transformer une application locale en une infrastructure D
 
 ---
 
-**Annexes** :
-- A. Captures d'écran Grafana
-- B. Logs de déploiement
-- C. Résultats des tests de charge
-- D. Configuration complète des secrets
+---
+
+## Annexes
+
+### A. Captures d'écran requises
+
+#### 1. Docker Compose
+- `docker-compose ps` montrant tous les services "Up (healthy)"
+- Frontend accessible dans le navigateur
+
+#### 2. Kubernetes
+- `kubectl get pods -n phone-book` avec tous les pods "Running"
+- `kubectl get svc -n phone-book`
+- Application accessible via Ingress ou port-forward
+
+#### 3. GitHub Actions
+- Pipeline CI/CD passé au vert
+- Détail des étapes : tests, build, push Docker Hub
+
+#### 4. Grafana
+- Dashboard "Phone Book - Application Overview" avec données réelles
+- Graphiques : HTTP Requests, Response Time, JVM Memory, Database Connections
+- Liste des datasources (Prometheus connecté)
+
+#### 5. Prometheus
+- Page "Targets" avec tous les targets "UP" :
+  - spring-boot (backend)
+  - mysql-exporter
+  - redis-exporter
+  - prometheus (self)
+- Exemple de requête : `rate(http_server_requests_seconds_count[5m])`
+
+### B. Commandes de validation
+
+```bash
+# Docker Compose
+docker-compose up -d
+docker-compose ps
+curl http://localhost:8080/actuator/health
+
+# Kubernetes
+cd k8s && ./create-secrets.sh && ./deploy.sh
+kubectl get all -n phone-book
+
+# Générer du trafic
+./generate-traffic.sh
+
+# Accéder à Grafana
+kubectl port-forward -n phone-book svc/grafana 3000:3000
+```
+
+### C. Structure des fichiers clés
+
+```
+projet-devops/
+├── README.md                          # Documentation principale
+├── RAPPORT.md                         # Ce rapport
+├── QUICKSTART.md                      # Guide de démarrage
+├── docker-compose.yml                 # Environnement local
+├── .github/workflows/ci-cd.yml        # Pipeline CI/CD
+├── k8s/
+│   ├── base/                          # Manifests Kubernetes
+│   ├── deploy.sh                      # Script de déploiement
+│   └── create-secrets.sh              # Génération des secrets
+├── spring-phone-book/
+│   ├── Dockerfile                     # Image backend
+│   └── pom.xml                        # Dépendances Maven
+└── phone-book-frontend/
+    ├── Dockerfile                     # Image frontend
+    └── package.json                   # Dépendances npm
+```
 
 **Références** :
 - [Kubernetes Documentation](https://kubernetes.io/docs/)

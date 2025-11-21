@@ -58,10 +58,17 @@ Application de gestion de contacts avec architecture microservices, déployée s
 git clone https://github.com/kvill0780/phone-book-devops.git
 cd phone-book
 
-# Créer les fichiers de secrets
-mkdir -p secrets
-echo "admin" > secrets/mysql_password.txt
-echo "admin" > secrets/grafana_password.txt
+# Gestion des secrets (développement local)
+# Copier les exemples, personnaliser et ne PAS commiter les secrets réels.
+# Copier l'exemple d'env et le modifier localement :
+cp .env.example .env
+
+# Pour Kubernetes, copier le template des secrets (ou créer un secret via kubectl):
+cp k8s/base/secrets.example.yaml k8s/base/secrets.yaml
+# Recommandé : créer un secret directement (exemple avec openssl) :
+# kubectl create secret generic mysql-secret \
+#   --from-literal=MYSQL_PASSWORD="$(openssl rand -base64 16)" \
+#   --from-literal=MYSQL_ROOT_PASSWORD="$(openssl rand -base64 16)" -n phone-book
 
 # Lancer l'application
 docker-compose up -d
@@ -161,7 +168,16 @@ graph LR
 
 ### Configuration
 
-Voir [.github/SETUP.md](.github/SETUP.md) pour configurer les secrets GitHub Actions.
+**IMPORTANT** : Pour activer le pipeline CI/CD complet, configurez les secrets GitHub :
+
+1. **Docker Hub** (obligatoire) :
+   - `DOCKER_USERNAME` : Votre username Docker Hub
+   - `DOCKER_PASSWORD` : Token d'accès Docker Hub
+
+2. **Kubernetes** (optionnel pour auto-deploy) :
+   - `KUBE_CONFIG` : Votre kubeconfig encodé en base64
+
+📖 **[Guide complet de configuration](.github/CICD-SETUP-GUIDE.md)**
 
 ## 🧪 Tests
 
@@ -179,23 +195,33 @@ npm test
 
 ## 📊 Monitoring
 
-### Prometheus
-- Métriques applicatives
-- Métriques système
-- Alertes configurables
+### Accès
+```bash
+# Grafana (dashboards)
+kubectl port-forward -n phone-book svc/grafana 3000:3000
+# http://localhost:3000 (admin/admin)
 
-### Grafana
-- Dashboards pré-configurés
-- Visualisation temps réel
-- Alerting
+# Prometheus (métriques)
+kubectl port-forward -n phone-book svc/prometheus 9090:9090
+# http://localhost:9090
 
-### Métriques disponibles
-- Nombre de requêtes HTTP
-- Temps de réponse
-- Taux d'erreur
-- Utilisation CPU/Mémoire
-- Connexions base de données
-- Cache hit/miss ratio
+# Générer du trafic pour tester
+./generate-traffic.sh
+```
+
+### Dashboard Grafana
+Dashboard pré-configuré : **"Phone Book - Application Overview"**
+- HTTP Requests Rate
+- Response Time (p95)
+- JVM Memory Usage
+- Active Pods
+- Error Rate
+- Database Connections (MySQL + Redis)
+
+### Exporters
+- **MySQL Exporter** : Métriques MySQL sur port 9104
+- **Redis Exporter** : Métriques Redis sur port 9121
+- **Spring Boot Actuator** : Métriques backend sur `/actuator/prometheus`
 
 ## 🔐 Sécurité
 
@@ -228,70 +254,46 @@ kubectl autoscale deployment backend \
 
 ## 🐛 Troubleshooting
 
-### Logs
 ```bash
-# Logs backend
+# Vérifier l'état des pods
+kubectl get pods -n phone-book
+
+# Logs d'un pod
 kubectl logs -f deployment/backend -n phone-book
 
-# Logs frontend
-kubectl logs -f deployment/frontend -n phone-book
+# Décrire un pod (events, erreurs)
+kubectl describe pod <pod-name> -n phone-book
 
-# Logs MySQL
-kubectl logs -f deployment/mysql -n phone-book
-```
-
-### Debug
-```bash
 # Entrer dans un pod
-kubectl exec -it <pod-name> -n phone-book -- /bin/bash
+kubectl exec -it <pod-name> -n phone-book -- /bin/sh
 
-# Vérifier les services
-kubectl get svc -n phone-book
+# Vérifier les secrets
+kubectl get secrets -n phone-book
 
-# Vérifier les endpoints
-kubectl get endpoints -n phone-book
+# Redémarrer un deployment
+kubectl rollout restart deployment/backend -n phone-book
 ```
 
 ## 🤝 Contribution
 
-1. Fork le projet
-2. Créer une branche (`git checkout -b feature/AmazingFeature`)
-3. Commit les changements (`git commit -m 'Add AmazingFeature'`)
-4. Push vers la branche (`git push origin feature/AmazingFeature`)
-5. Ouvrir une Pull Request
+```bash
+git checkout -b feature/ma-feature
+git commit -m "feat: description"
+git push origin feature/ma-feature
+# Ouvrir une Pull Request sur GitHub
+```
 
-## 📝 Documentation Complète
+## 📝 Documentation
 
-### Documents Principaux
-- **[INDEX.md](INDEX.md)** - Index de toute la documentation
-- **[RAPPORT.md](RAPPORT.md)** - Rapport technique complet (10 pages)
-- **[RESUME-EXECUTIF.md](RESUME-EXECUTIF.md)** - Synthèse pour la direction
-- **[QUICKSTART.md](QUICKSTART.md)** - Guide de démarrage rapide
-- **[PRESENTATION.md](PRESENTATION.md)** - Guide de présentation du projet
+- **[README.md](README.md)** (ce fichier) - Vue d'ensemble et guide d'utilisation
+- **[RAPPORT.md](RAPPORT.md)** - Rapport technique complet (5-10 pages)
+- **[QUICKSTART.md](QUICKSTART.md)** - Démarrage rapide en 3 minutes
+- **[.github/CICD-SETUP-GUIDE.md](.github/CICD-SETUP-GUIDE.md)** - Configuration du pipeline CI/CD
 
-### Guides Techniques
-- **[LIVRABLES.md](LIVRABLES.md)** - Validation des livrables
-- **[ANNEXES.md](ANNEXES.md)** - Annexes détaillées
-- **[GRAFANA-SCREENSHOTS.md](GRAFANA-SCREENSHOTS.md)** - Guide captures Grafana
-- **[CICD-STATUS.md](CICD-STATUS.md)** - État du pipeline CI/CD
-- **[GITHUB-SETUP.md](GITHUB-SETUP.md)** - Configuration GitHub
+## 👥 Auteur
 
-### Parcours Recommandés
-1. **Démarrage rapide** : README → QUICKSTART → `docker-compose up`
-2. **Compréhension** : README → RAPPORT → ANNEXES
-3. **Présentation** : RESUME-EXECUTIF → PRESENTATION → LIVRABLES
-
-## 👥 Auteurs
-
-- **Étudiant MIAGE L3** - Ingénieur DevOps Junior
+**Étudiant MIAGE L3** - Projet DevOps
 
 ## 📄 Licence
 
-Ce projet est sous licence MIT - voir le fichier [LICENSE](LICENSE) pour plus de détails.
-
-## 🙏 Remerciements
-
-- Spring Boot Team
-- React Team
-- Kubernetes Community
-- Prometheus & Grafana Teams
+MIT License

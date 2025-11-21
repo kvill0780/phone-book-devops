@@ -18,7 +18,8 @@ echo "🔐 Creating secrets..."
 if [ -f base/secrets.yaml ]; then
     kubectl apply -f base/secrets.yaml
 else
-    echo "⚠️  secrets.yaml not found, using secrets.example.yaml"
+    echo "⚠️  secrets.yaml not found. Run ./create-secrets.sh first!"
+    echo "   Using example secrets for now (NOT SECURE FOR PRODUCTION)"
     kubectl apply -f base/secrets.example.yaml
 fi
 
@@ -43,8 +44,18 @@ kubectl apply -f base/frontend-deployment.yaml
 echo "📊 Deploying Prometheus..."
 kubectl apply -f base/prometheus-deployment.yaml
 
+echo "📈 Deploying Grafana datasources and dashboards..."
+kubectl apply -f base/grafana-datasources-configmap.yaml
+kubectl apply -f base/grafana-dashboards-configmap.yaml
+
 echo "📈 Deploying Grafana..."
 kubectl apply -f base/grafana-deployment.yaml
+
+echo "📡 Deploying MySQL Exporter..."
+kubectl apply -f base/mysql-exporter-deployment.yaml
+
+echo "📡 Deploying Redis Exporter..."
+kubectl apply -f base/redis-exporter-deployment.yaml
 
 echo "🌐 Creating Ingress..."
 kubectl apply -f base/ingress.yaml
@@ -66,7 +77,12 @@ echo "1. Add to /etc/hosts: 127.0.0.1 phone-book.local"
 echo "2. Enable Ingress (minikube): minikube addons enable ingress"
 echo "3. Access: http://phone-book.local"
 echo ""
+echo "📊 Monitoring:"
+echo "  Grafana: http://phone-book.local/grafana (admin/admin)"
+echo "  Prometheus: http://phone-book.local/prometheus"
+echo ""
 echo "🔍 Useful commands:"
 echo "  kubectl get pods -n phone-book"
 echo "  kubectl logs -f deployment/backend -n phone-book"
 echo "  kubectl describe pod <pod-name> -n phone-book"
+echo "  kubectl port-forward -n phone-book svc/grafana 3000:3000"

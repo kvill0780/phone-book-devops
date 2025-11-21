@@ -28,8 +28,9 @@ spec:
     spec:
       containers:
         - name: frontend
+          # Image tag: 'latest' for local dev, replaced by CI with git SHA for production
           image: kvill0780/phone-book-frontend:latest
-          imagePullPolicy: IfNotPresent
+          imagePullPolicy: Always
           ports:
             - containerPort: 80
           livenessProbe:

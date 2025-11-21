@@ -1,184 +1,152 @@
-# 🚀 Quick Start Guide
+# ⚡ Démarrage Rapide - 3 Minutes
 
-## Prérequis
-
-- Docker & Docker Compose
-- (Optionnel) Kubernetes (minikube/kind)
-- (Optionnel) kubectl
-
-## 🎯 Démarrage en 3 minutes
-
-### 1. Cloner le projet
+## Option 1 : Docker Compose (Développement Local)
 
 ```bash
+# 1. Cloner le repo
 git clone https://github.com/kvill0780/phone-book-devops.git
 cd phone-book-devops
-```
 
-### 2. Lancer avec Docker Compose
-
-```bash
-# Créer les secrets
-mkdir -p secrets
-echo "admin" > secrets/mysql_password.txt
-echo "admin" > secrets/grafana_password.txt
-
-# Lancer l'application
+# 2. Lancer l'application
 docker-compose up -d
 
-# Attendre 30 secondes que tout démarre
-sleep 30
+# 3. Attendre que tout démarre (30-60s)
+docker-compose ps
+
+# 4. Accéder à l'application
+# Frontend:    http://localhost:8000
+# Backend API: http://localhost:8080/api
+# Grafana:     http://localhost:3000 (admin/admin)
+# Prometheus:  http://localhost:9090
 ```
 
-### 3. Accéder à l'application
-
-- **Application** : http://localhost:8000
-- **Backend API** : http://localhost:8080/api
-- **Grafana** : http://localhost:3000 (admin/admin)
-- **Prometheus** : http://localhost:9090
-
-## 📊 Vérifier que tout fonctionne
-
+### Générer du trafic
 ```bash
-# Voir les conteneurs
-docker compose ps
-
-# Voir les logs
-docker compose logs -f backend
-
-# Tester l'API
-curl http://localhost:8080/actuator/health
+./generate-traffic.sh
 ```
 
-## 🎓 Déploiement Kubernetes (Optionnel)
+### Arrêter
+```bash
+docker-compose down -v
+```
+
+---
+
+## Option 2 : Kubernetes (Production)
 
 ### Prérequis
+- Kubernetes cluster (minikube, kind, ou cloud)
+- kubectl configuré
+
+### Déploiement
+
 ```bash
-# Démarrer minikube
-minikube start
-
-# Activer les addons
-minikube addons enable ingress
-minikube addons enable metrics-server
-```
-
-### Déployer
-```bash
-# Charger les images locales
-docker build -t projetdevops-backend:latest spring-phone-book/
-docker build -t projetdevops-frontend:latest phone-book-frontend/
-minikube image load projetdevops-backend:latest
-minikube image load projetdevops-frontend:latest
-
-# Déployer sur Kubernetes
+# 1. Créer les secrets
 cd k8s
+./create-secrets.sh
+# ⚠️ Sauvegarder les mots de passe affichés !
+
+# 2. Déployer
 ./deploy.sh
 
-# Vérifier
+# 3. Vérifier
 kubectl get pods -n phone-book
+# Attendre que tous les pods soient "Running"
+
+# 4. Accéder à l'application
+# Ajouter à /etc/hosts:
+echo "127.0.0.1 phone-book.local" | sudo tee -a /etc/hosts
+
+# Pour minikube:
+minikube addons enable ingress
+minikube tunnel  # Dans un terminal séparé
+
+# Application: http://phone-book.local
 ```
 
-### Accéder
+### Port-forwarding (alternative)
 ```bash
-# Obtenir l'IP Minikube
-minikube ip
+# Backend
+kubectl port-forward -n phone-book svc/backend 8080:8080
 
-# Ajouter à /etc/hosts
-echo "$(minikube ip) phone-book.local" | sudo tee -a /etc/hosts
+# Frontend
+kubectl port-forward -n phone-book svc/frontend 8000:80
 
-# Accéder
-# http://phone-book.local
+# Grafana
+kubectl port-forward -n phone-book svc/grafana 3000:3000
 ```
 
-## 🛠️ Commandes utiles
-
-### Docker Compose
+### Nettoyer
 ```bash
-# Arrêter
-docker compose down
-
-# Redémarrer un service
-docker compose restart backend
-
-# Voir les logs
-docker compose logs -f
-
-# Nettoyer
-docker compose down -v
-```
-
-### Kubernetes
-```bash
-# Voir les pods
-kubectl get pods -n phone-book
-
-# Logs d'un pod
-kubectl logs -f <pod-name> -n phone-book
-
-# Redémarrer un deployment
-kubectl rollout restart deployment backend -n phone-book
-
-# Nettoyer
 kubectl delete namespace phone-book
 ```
 
-## 🐛 Troubleshooting
+---
 
-### Backend ne démarre pas
+## 🔧 Configuration CI/CD
+
+Pour activer le pipeline automatique :
+
+1. **Créer un compte Docker Hub** (si pas déjà fait)
+
+2. **Configurer les secrets GitHub** :
+   - Aller dans Settings → Secrets and variables → Actions
+   - Ajouter :
+     - `DOCKER_USERNAME` : votre username Docker Hub
+     - `DOCKER_PASSWORD` : créer un token sur https://hub.docker.com/settings/security
+
+3. **Push sur main** :
+   ```bash
+   git add .
+   git commit -m "feat: mon changement"
+   git push origin main
+   ```
+
+4. **Vérifier** : Onglet "Actions" sur GitHub
+
+📖 **Guide complet** : [.github/CICD-SETUP-GUIDE.md](.github/CICD-SETUP-GUIDE.md)
+
+---
+
+## 📊 Monitoring
+
 ```bash
-# Vérifier MySQL est prêt
-docker compose logs mysql
+# Accéder à Grafana
+kubectl port-forward -n phone-book svc/grafana 3000:3000
+# http://localhost:3000 (admin/admin)
 
-# Vider le cache Redis
-docker exec phone-book-redis redis-cli FLUSHALL
+# Dashboard pré-configuré : "Phone Book - Application Overview"
+
+# Générer du trafic pour voir les métriques
+./generate-traffic.sh
 ```
 
-### Frontend ne charge pas
-```bash
-# Vérifier les logs
-docker compose logs frontend
+---
 
-# Reconstruire
-docker compose up -d --build frontend
+## 🐛 Problèmes Courants
+
+### Les pods ne démarrent pas
+```bash
+kubectl describe pod <pod-name> -n phone-book
+kubectl logs <pod-name> -n phone-book
 ```
 
-### Port déjà utilisé
-```bash
-# Changer les ports dans docker-compose.yml
-# Exemple: "8001:80" au lieu de "8000:80"
-```
+### Erreur "ImagePullBackOff"
+- Vérifier que les images existent sur Docker Hub
+- Ou builder localement : `docker-compose build`
 
-## 📚 Documentation complète
+### MySQL ne démarre pas
+- Augmenter les ressources du cluster
+- Vérifier les PVC : `kubectl get pvc -n phone-book`
 
-- [README.md](README.md) - Vue d'ensemble
-- [RAPPORT.md](RAPPORT.md) - Rapport technique
-- [ANNEXES.md](ANNEXES.md) - Annexes détaillées
-- [GITHUB-SETUP.md](GITHUB-SETUP.md) - Configuration GitHub
-- [CICD-STATUS.md](CICD-STATUS.md) - État CI/CD
+### Le pipeline CI/CD échoue
+- Vérifier que les secrets GitHub sont configurés
+- Voir [.github/CICD-SETUP-GUIDE.md](.github/CICD-SETUP-GUIDE.md)
 
-## 🎯 Prochaines étapes
+---
 
-1. Créer un compte utilisateur
-2. Ajouter des contacts
-3. Créer des groupes
-4. Explorer Grafana pour les métriques
-5. Tester le scaling Kubernetes
+## 📚 Documentation Complète
 
-## ✅ Checklist de vérification
-
-- [ ] Docker Compose lance tous les services
-- [ ] Application accessible sur http://localhost:8000
-- [ ] Backend répond sur http://localhost:8080/actuator/health
-- [ ] Grafana accessible sur http://localhost:3000
-- [ ] Prometheus accessible sur http://localhost:9090
-- [ ] Création de compte fonctionne
-- [ ] Ajout de contact fonctionne
-- [ ] Recherche fonctionne
-
-## 🆘 Support
-
-En cas de problème:
-1. Vérifier les logs: `docker compose logs`
-2. Vérifier les ports: `docker compose ps`
-3. Nettoyer et redémarrer: `docker-compose down -v && docker-compose up -d`
-4. Consulter [ANNEXES.md](ANNEXES.md) section Troubleshooting
+- **[README.md](README.md)** - Vue d'ensemble et architecture
+- **[RAPPORT.md](RAPPORT.md)** - Rapport technique détaillé
+- **[.github/CICD-SETUP-GUIDE.md](.github/CICD-SETUP-GUIDE.md)** - Configuration CI/CD

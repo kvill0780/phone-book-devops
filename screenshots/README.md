@@ -1,137 +1,85 @@
-# 📸 Screenshots Grafana
+# 📸 Captures d'Écran pour le Rapport
 
-Ce dossier contient les captures d'écran des dashboards Grafana pour la documentation du projet.
+## Captures Requises
 
-## 📋 Captures à Réaliser
+### 1. Docker Compose ✅
+- [ ] `docker-compose ps` - tous les services "Up (healthy)"
+- [ ] Frontend dans le navigateur (http://localhost:8000)
+- [ ] Backend health check (http://localhost:8080/actuator/health)
 
-### 1. Dashboard Application Overview
-**Fichier** : `dashboard-overview.png`
+### 2. Kubernetes ✅
+- [ ] `kubectl get pods -n phone-book` - tous "Running"
+- [ ] `kubectl get svc -n phone-book`
+- [ ] Application accessible (via Ingress ou port-forward)
 
-**Contenu** :
-- Statistiques globales (total contacts, requêtes/min, taux d'erreur)
-- Graphique du trafic HTTP en temps réel
-- Distribution des temps de réponse
-- Status codes (pie chart)
+### 3. GitHub Actions ✅
+- [ ] Pipeline CI/CD passé au vert (onglet Actions)
+- [ ] Détail d'un workflow : tests, build, push
 
----
+### 4. Grafana ✅
+- [ ] Dashboard "Phone Book - Application Overview"
+- [ ] Graphiques avec données réelles :
+  - HTTP Requests Rate
+  - Response Time (p95)
+  - JVM Memory Usage
+  - Active Pods
+  - Error Rate
+  - Database Connections
+- [ ] Liste des datasources (Prometheus)
 
-### 2. Dashboard Performance
-**Fichier** : `dashboard-performance.png`
+### 5. Prometheus ✅
+- [ ] Page "Status → Targets" - tous "UP"
+- [ ] Exemple de requête avec résultats
 
-**Contenu** :
-- Latence P50, P95, P99 par endpoint
-- Temps de réponse moyen
-- Throughput (requêtes/seconde)
-- Comparaison avant/après optimisations
+## Comment Prendre les Captures
 
----
-
-### 3. Dashboard Infrastructure
-**Fichier** : `dashboard-infrastructure.png`
-
-**Contenu** :
-- CPU usage par pod
-- Memory usage par pod
-- Network I/O
-- Pods status (running/failed)
-- Disk I/O
-
----
-
-### 4. Dashboard Base de Données
-**Fichier** : `dashboard-database.png`
-
-**Contenu** :
-- Connexions MySQL actives/idle
-- Query execution time
-- Redis cache hit ratio
-- Cache operations/sec
-
----
-
-### 5. Dashboard Sécurité
-**Fichier** : `dashboard-security.png`
-
-**Contenu** :
-- Rate limiting (requêtes bloquées)
-- Circuit breaker status
-- Tentatives d'authentification (succès/échecs)
-- JVM metrics (heap, GC)
-
----
-
-## 🎯 Instructions de Capture
-
-### Préparation
-1. Démarrer l'application (Kubernetes ou Docker Compose)
-2. Accéder à Grafana (http://localhost:3000)
-3. Se connecter (admin/admin)
-4. Importer ou créer les dashboards
-
-### Génération de Trafic
+### Préparer l'environnement
 ```bash
-# Lancer le script de génération de trafic
+# 1. Lancer l'application
+docker-compose up -d
+# OU
+cd k8s && ./deploy.sh
+
+# 2. Générer du trafic
 ./generate-traffic.sh
 
-# Ou manuellement
-for i in {1..100}; do
-  curl -X GET http://localhost:8080/api/contacts \
-    -H "Authorization: Bearer $TOKEN"
-  sleep 0.1
-done
+# 3. Accéder à Grafana
+kubectl port-forward -n phone-book svc/grafana 3000:3000
+# http://localhost:3000 (admin/admin)
 ```
 
-### Capture d'Écran
-1. Attendre que les métriques soient visibles (2-3 minutes)
-2. Ajuster la période d'affichage (Last 15 minutes)
-3. Prendre une capture plein écran
-4. Nommer selon la convention : `dashboard-[nom].png`
-5. Ajouter annotations si nécessaire
+### Nommage des fichiers
+```
+01-docker-compose-ps.png
+02-frontend-browser.png
+03-kubectl-get-pods.png
+04-kubectl-get-svc.png
+05-github-actions-pipeline.png
+06-grafana-dashboard-overview.png
+07-grafana-http-requests.png
+08-grafana-response-time.png
+09-grafana-jvm-memory.png
+10-grafana-database-connections.png
+11-prometheus-targets.png
+12-prometheus-query.png
+```
 
-### Format Recommandé
-- **Résolution** : 1920x1080 minimum
-- **Format** : PNG
-- **Qualité** : Haute (pas de compression excessive)
-- **Annotations** : Optionnelles mais recommandées
+## Intégration dans le Rapport
 
----
-
-## 📝 Documentation des Captures
-
-Pour chaque capture, créer une section dans `RAPPORT.md` :
+Dans `RAPPORT.md`, section Annexes :
 
 ```markdown
-### Dashboard [NOM]
+### Captures d'écran
 
-![Dashboard](./screenshots/dashboard-[nom].png)
+#### Docker Compose
+![Docker Compose Services](screenshots/01-docker-compose-ps.png)
 
-**Métriques affichées** :
-- [Métrique 1] : [Description]
-- [Métrique 2] : [Description]
+#### Kubernetes
+![Kubernetes Pods](screenshots/03-kubectl-get-pods.png)
 
-**Observations** :
-- [Observation 1]
-- [Observation 2]
+#### Grafana Dashboard
+![Grafana Overview](screenshots/06-grafana-dashboard-overview.png)
 
-**Interprétation** :
-- [Analyse des résultats]
+#### Prometheus Targets
+![Prometheus Targets](screenshots/11-prometheus-targets.png)
 ```
-
----
-
-## ✅ Checklist
-
-- [ ] Dashboard Overview capturé
-- [ ] Dashboard Performance capturé
-- [ ] Dashboard Infrastructure capturé
-- [ ] Dashboard Database capturé
-- [ ] Dashboard Security capturé
-- [ ] Captures annotées si nécessaire
-- [ ] Documentation ajoutée au RAPPORT.md
-- [ ] Fichiers nommés correctement
-- [ ] Résolution suffisante (1920x1080+)
-- [ ] Métriques visibles et lisibles
-
----
-
-**Note** : Les captures doivent montrer des données réelles, pas des dashboards vides. Générer du trafic avant de capturer !

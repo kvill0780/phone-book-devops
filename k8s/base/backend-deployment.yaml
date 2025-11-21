@@ -35,8 +35,9 @@ spec:
     spec:
       containers:
         - name: backend
+          # Image tag: 'latest' for local dev, replaced by CI with git SHA for production
           image: kvill0780/phone-book-backend:latest
-          imagePullPolicy: IfNotPresent
+          imagePullPolicy: Always
           ports:
             - containerPort: 8080
           env:
@@ -88,8 +89,9 @@ spec:
             httpGet:
               path: /actuator/health
               port: 8080
-            initialDelaySeconds: 30
+            initialDelaySeconds: 60
             periodSeconds: 5
+            timeoutSeconds: 3
           resources:
             requests:
               memory: "512Mi"
