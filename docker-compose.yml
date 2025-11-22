@@ -218,7 +218,7 @@ networks:
     driver: bridge
 
 volumes:
-  mysql_data:
-  redis_data:
-  prometheus_data:
-  grafana_data:
+  mysql_data:        # Volume pour MySQL
+  redis_data:        # Volume pour Redis
+  prometheus_data:   # Volume pour Prometheus
+  grafana_data:      # Volume pour Grafana

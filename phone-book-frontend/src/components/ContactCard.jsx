@@ -10,16 +10,15 @@ const ContactCard = ({ contact, onEdit, onDelete }) => {
           </div>
           <div>
             <h3 className="text-lg font-semibold text-gray-900">
-              {contact.firstName} {contact.lastName}
-            </h3>
-            {contact.group && (
-              <span className="inline-block bg-gray-100 text-gray-800 text-xs px-2 py-1 rounded-full mt-1">
-                {contact.group.name}
-              </span>
-            )}
+              {contact.firstName}
+              {contact.group && (
+                <span className="inline-block bg-gray-100 text-gray-800 text-xs px-2 py-1 rounded-full mt-1">
+                  {contact.group.name}
+                </span>
+              )}
           </div>
         </div>
-        
+
         <div className="flex space-x-2">
           <button
             onClick={() => onEdit(contact)}
@@ -35,7 +34,7 @@ const ContactCard = ({ contact, onEdit, onDelete }) => {
           </button>
         </div>
       </div>
-      
+
       <div className="mt-4 space-y-2">
         <div className="flex items-center space-x-3 text-gray-600">
           <Phone className="h-4 w-4" />

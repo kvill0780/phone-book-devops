@@ -78,6 +78,11 @@ spec:
                 configMapKeyRef:
                   name: app-config
                   key: MANAGEMENT_ENDPOINTS_WEB_EXPOSURE_INCLUDE
+            - name: JWT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: jwt-secret
+                  key: JWT_SECRET
           livenessProbe:
             httpGet:
               path: /actuator/health
