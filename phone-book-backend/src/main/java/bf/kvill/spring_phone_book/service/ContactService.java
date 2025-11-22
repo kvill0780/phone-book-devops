@@ -29,7 +29,7 @@ public class ContactService {
         return contactRepository.save(contact);
     }
 
-    @Cacheable(value = "contacts", key = "'user:' + #user.id")
+    // @Cacheable(value = "contacts", key = "'user:' + #user.id") // Désactivé temporairement - problème sérialisation Redis
     public List<Contact> getAllContactsForUser(User user) {
         return contactRepository.findAll().stream()
                 .filter(c -> c.getUser().getId().equals(user.getId()))

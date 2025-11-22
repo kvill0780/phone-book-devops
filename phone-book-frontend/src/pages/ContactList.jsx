@@ -16,19 +16,19 @@ const ContactList = () => {
   const [isSearching, setIsSearching] = useState(false);
   const [filteredByGroup, setFilteredByGroup] = useState([]);
   const [isFilteringByGroup, setIsFilteringByGroup] = useState(false);
-  
+
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const { isAuthenticated, loading: authLoading, user } = useAuth();
 
   useEffect(() => {
     if (authLoading) return;
-    
+
     if (!isAuthenticated) {
       // Redirection gérée par ProtectedRoute
       return;
     }
-    
+
     if (isAuthenticated && user) {
       loadContacts();
     }
@@ -38,11 +38,11 @@ const ContactList = () => {
   useEffect(() => {
     const groupId = searchParams.get('groupId');
     const groupName = searchParams.get('groupName');
-    
+
     if (groupId && contacts.length > 0) {
       handleGroupFilter(groupId);
       if (groupName) {
-        setInfoMessage(`Affichage des contacts du groupe "${decodeURIComponent(groupName)}"`);  
+        setInfoMessage(`Affichage des contacts du groupe "${decodeURIComponent(groupName)}"`);
         // Clear message after 3 seconds
         setTimeout(() => setInfoMessage(''), 3000);
       }
@@ -54,7 +54,7 @@ const ContactList = () => {
       setLoading(true);
       setError('');
       const response = await contactAPI.getAll();
-      
+
       // Le backend doit toujours retourner un tableau
       if (Array.isArray(response.data)) {
         setContacts(response.data);
@@ -70,7 +70,7 @@ const ContactList = () => {
       if (process.env.NODE_ENV === 'development') {
         console.error('Erreur lors du chargement des contacts:', err);
       }
-      
+
       if (err.response?.status === 401) {
         // 401 errors are handled by the API interceptor, but we should still clear error
         setError('');
@@ -105,7 +105,7 @@ const ContactList = () => {
       setIsSearching(true);
       setError('');
       let response;
-      
+
       switch (searchType) {
         case 'firstName':
           response = await contactAPI.searchByFirstName(query);
@@ -117,8 +117,8 @@ const ContactList = () => {
           response = await contactAPI.searchByPhone(query);
           break;
         case 'group':
-          const filteredByGroup = contacts.filter(contact => 
-            contact.group && 
+          const filteredByGroup = contacts.filter(contact =>
+            contact.group &&
             contact.group.name.toLowerCase().includes(query.toLowerCase())
           );
           setSearchResults(filteredByGroup);
@@ -126,19 +126,21 @@ const ContactList = () => {
         default:
           response = await contactAPI.search(query);
       }
-      
+
       if (response.data && Array.isArray(response.data)) {
         setSearchResults(response.data);
-        if (response.data.length === 0) {
-          setError('Aucun contact trouvé');
-        }
       } else {
         setSearchResults([]);
         setError('Format de réponse invalide');
       }
     } catch (err) {
-      setSearchResults([]);
-      setError('Erreur lors de la recherche');
+      if (err.response?.status === 404) {
+        setSearchResults([]);
+        setError('');
+      } else {
+        setSearchResults([]);
+        setError('Erreur lors de la recherche');
+      }
     }
   };
 
@@ -153,12 +155,12 @@ const ContactList = () => {
       return;
     }
 
-    const filtered = contacts.filter(contact => 
+    const filtered = contacts.filter(contact =>
       contact.group && contact.group.id.toString() === groupId
     );
     setFilteredByGroup(filtered);
     setIsFilteringByGroup(true);
-    
+
     // Reset search when filtering by group
     setSearchResults([]);
     setIsSearching(false);
@@ -178,8 +180,8 @@ const ContactList = () => {
     }
   };
 
-  const displayedContacts = isSearching ? searchResults : 
-                           isFilteringByGroup ? filteredByGroup : contacts;
+  const displayedContacts = isSearching ? searchResults :
+    isFilteringByGroup ? filteredByGroup : contacts;
 
   // Show loading while auth is initializing or contacts are loading
   if (authLoading || loading) {
@@ -210,7 +212,7 @@ const ContactList = () => {
           {error}
         </div>
       )}
-      
+
       {infoMessage && (
         <div className="bg-blue-50 border border-blue-200 text-blue-600 px-4 py-3 rounded mb-4 flex items-center">
           <Users className="h-4 w-4 mr-2" />
@@ -225,7 +227,7 @@ const ContactList = () => {
             {isSearching ? 'Aucun résultat' : 'Aucun contact'}
           </h3>
           <p className="mt-1 text-sm text-gray-500">
-            {isSearching 
+            {isSearching
               ? 'Essayez avec d\'autres termes de recherche'
               : 'Commencez par ajouter un nouveau contact'
             }
