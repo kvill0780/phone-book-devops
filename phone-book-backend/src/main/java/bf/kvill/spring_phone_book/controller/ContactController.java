@@ -18,6 +18,11 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 
 import java.util.List;
 
@@ -25,6 +30,8 @@ import java.util.List;
 @RequestMapping("/api/contacts")
 @RequiredArgsConstructor
 @Validated
+@Tag(name = "Contacts", description = "Gestion des contacts du répertoire téléphonique")
+@SecurityRequirement(name = "bearerAuth")
 public class ContactController {
     
     private final ContactService contactService;
@@ -35,6 +42,11 @@ public class ContactController {
         return userService.findByUsername(auth.getName());
     }
 
+    @Operation(summary = "Créer un contact", description = "Ajoute un nouveau contact au répertoire de l'utilisateur")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "201", description = "Contact créé avec succès"),
+        @ApiResponse(responseCode = "400", description = "Données invalides")
+    })
     @PostMapping
     public ResponseEntity<Contact> createContact(@Valid @RequestBody ContactRequest contactRequest, Authentication auth) {
         Timer.Sample sample = metricsService.startContactOperationTimer();
@@ -48,18 +60,27 @@ public class ContactController {
         }
     }
 
+    @Operation(summary = "Lister tous les contacts", description = "Récupère tous les contacts de l'utilisateur connecté")
+    @ApiResponse(responseCode = "200", description = "Liste des contacts retournée")
     @GetMapping
     public List<Contact> getAllContacts(Authentication auth) {
         User user = getCurrentUser(auth);
         return contactService.getAllContactsForUser(user);
     }
 
+    @Operation(summary = "Obtenir un contact", description = "Récupère les détails d'un contact par son ID")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Contact trouvé"),
+        @ApiResponse(responseCode = "404", description = "Contact non trouvé")
+    })
     @GetMapping("/{id}")
     public ResponseEntity<Contact> getContact(@PathVariable Long id, Authentication auth) {
         User user = getCurrentUser(auth);
         return ResponseEntity.ok(contactService.getContactById(id, user));
     }
 
+    @Operation(summary = "Rechercher par numéro", description = "Recherche des contacts par numéro de téléphone")
+    @ApiResponse(responseCode = "200", description = "Contacts trouvés")
     @GetMapping("/search/phone")
     public ResponseEntity<List<Contact>> searchByPhoneNumber(
             @RequestParam @NotBlank @Pattern(regexp = "^[0-9+\\-\\s()]+$", message = "Format de téléphone invalide") String phoneNumber, 
@@ -72,6 +93,8 @@ public class ContactController {
         return ResponseEntity.ok(results);
     }
 
+    @Operation(summary = "Rechercher par prénom", description = "Recherche des contacts par prénom")
+    @ApiResponse(responseCode = "200", description = "Contacts trouvés")
     @GetMapping("/search/firstname")
     public ResponseEntity<List<Contact>> searchByFirstName(
             @RequestParam @NotBlank @Size(min = 2, max = 50) @Pattern(regexp = "^[a-zA-ZÀ-ÿ\\s-]+$", message = "Le prénom ne peut contenir que des lettres") String firstName, 
@@ -84,6 +107,8 @@ public class ContactController {
         return ResponseEntity.ok(results);
     }
 
+    @Operation(summary = "Rechercher par nom", description = "Recherche des contacts par nom de famille")
+    @ApiResponse(responseCode = "200", description = "Contacts trouvés")
     @GetMapping("/search/lastname")
     public ResponseEntity<List<Contact>> searchByLastName(
             @RequestParam @NotBlank @Size(min = 2, max = 50) @Pattern(regexp = "^[a-zA-ZÀ-ÿ\\s-]+$", message = "Le nom ne peut contenir que des lettres") String lastName, 
@@ -96,12 +121,16 @@ public class ContactController {
         return ResponseEntity.ok(results);
     }
 
+    @Operation(summary = "Contacts par groupe", description = "Récupère tous les contacts d'un groupe spécifique")
+    @ApiResponse(responseCode = "200", description = "Contacts du groupe retournés")
     @GetMapping("/group/{groupId}")
     public ResponseEntity<List<Contact>> getContactsByGroup(@PathVariable Long groupId, Authentication auth) {
         User user = getCurrentUser(auth);
         return ResponseEntity.ok(contactService.getContactsByGroup(groupId, user));
     }
 
+    @Operation(summary = "Recherche globale", description = "Recherche des contacts par nom, prénom ou numéro")
+    @ApiResponse(responseCode = "200", description = "Résultats de recherche retournés")
     @GetMapping("/search")
     public ResponseEntity<List<Contact>> searchContacts(
             @RequestParam @NotBlank @Size(min = 2, max = 50) String query, 
@@ -115,6 +144,11 @@ public class ContactController {
         return ResponseEntity.ok(results);
     }
 
+    @Operation(summary = "Modifier un contact", description = "Met à jour les informations d'un contact existant")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Contact modifié avec succès"),
+        @ApiResponse(responseCode = "404", description = "Contact non trouvé")
+    })
     @PutMapping("/{id}")
     public ResponseEntity<Contact> updateContact(@PathVariable Long id, @Valid @RequestBody ContactRequest contactRequest, Authentication auth) {
         Timer.Sample sample = metricsService.startContactOperationTimer();
@@ -127,6 +161,11 @@ public class ContactController {
         }
     }
 
+    @Operation(summary = "Supprimer un contact", description = "Supprime définitivement un contact du répertoire")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "204", description = "Contact supprimé avec succès"),
+        @ApiResponse(responseCode = "404", description = "Contact non trouvé")
+    })
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteContact(@PathVariable Long id, Authentication auth) {
         User user = getCurrentUser(auth);

@@ -141,6 +141,8 @@ services:
           cpus: '0.5'
           memory: 512M
 
+          
+
   mysql-exporter:
     image: prom/mysqld-exporter:v0.15.1
     container_name: phone-book-mysql-exporter

@@ -20,6 +20,24 @@ public class SecurityHeadersConfig {
             protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
                     throws ServletException, IOException {
                 
+                String path = request.getRequestURI();
+                
+                // Skip strict CSP for Swagger UI
+                if (path.startsWith("/swagger-ui") || path.startsWith("/api-docs") || 
+                    path.startsWith("/v3/api-docs") || path.equals("/swagger-ui.html")) {
+                    // Relaxed CSP for Swagger
+                    response.setHeader("Content-Security-Policy", 
+                        "default-src 'self'; " +
+                        "script-src 'self' 'unsafe-inline' 'unsafe-eval'; " +
+                        "style-src 'self' 'unsafe-inline'; " +
+                        "img-src 'self' data: https:; " +
+                        "connect-src 'self'; " +
+                        "font-src 'self' data:;"
+                    );
+                    filterChain.doFilter(request, response);
+                    return;
+                }
+                
                 // Security Headers
                 response.setHeader("X-Content-Type-Options", "nosniff");
                 response.setHeader("X-Frame-Options", "DENY");

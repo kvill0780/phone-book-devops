@@ -25,9 +25,11 @@ public class RateLimitingFilter extends OncePerRequestFilter {
 
         String endpoint = request.getRequestURI();
         
-        // Skip rate limiting for Swagger/OpenAPI endpoints
+        // Skip rate limiting for public endpoints
         if (endpoint.startsWith("/swagger-ui") || endpoint.startsWith("/api-docs") || 
-            endpoint.startsWith("/v3/api-docs") || endpoint.equals("/swagger-ui.html")) {
+            endpoint.startsWith("/v3/api-docs") || endpoint.equals("/swagger-ui.html") ||
+            endpoint.startsWith("/actuator/health") || endpoint.startsWith("/actuator/info") ||
+            endpoint.startsWith("/actuator/prometheus")) {
             filterChain.doFilter(request, response);
             return;
         }
