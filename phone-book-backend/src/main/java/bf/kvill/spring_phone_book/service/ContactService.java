@@ -29,7 +29,8 @@ public class ContactService {
         return contactRepository.save(contact);
     }
 
-    // @Cacheable(value = "contacts", key = "'user:' + #user.id") // Désactivé temporairement - problème sérialisation Redis
+    // @Cacheable(value = "contacts", key = "'user:' + #user.id") // Désactivé
+    // temporairement - problème sérialisation Redis
     public List<Contact> getAllContactsForUser(User user) {
         return contactRepository.findAll().stream()
                 .filter(c -> c.getUser().getId().equals(user.getId()))
@@ -93,8 +94,8 @@ public class ContactService {
         return contactRepository.findAll().stream()
                 .filter(c -> c.getUser().getId().equals(user.getId()))
                 .filter(c -> c.getFirstName().toLowerCase().contains(query.toLowerCase()) ||
-                           c.getLastName().toLowerCase().contains(query.toLowerCase()) ||
-                           c.getPhoneNumber().contains(query))
+                        c.getLastName().toLowerCase().contains(query.toLowerCase()) ||
+                        c.getPhoneNumber().contains(query))
                 .toList();
     }
 
@@ -105,14 +106,15 @@ public class ContactService {
         contact.setFirstName(request.getFirstName());
         contact.setLastName(request.getLastName());
         contact.setPhoneNumber(request.getPhoneNumber());
+        contact.setEmail(request.getEmail());
         contact.setUser(user);
-        
+
         if (request.getGroupId() != null) {
             Group group = groupRepository.findById(request.getGroupId())
-                .orElseThrow(() -> new RuntimeException("Groupe non trouvé"));
+                    .orElseThrow(() -> new RuntimeException("Groupe non trouvé"));
             contact.setGroup(group);
         }
-        
+
         return contactRepository.save(contact);
     }
 
@@ -123,15 +125,16 @@ public class ContactService {
         contact.setFirstName(request.getFirstName());
         contact.setLastName(request.getLastName());
         contact.setPhoneNumber(request.getPhoneNumber());
-        
+        contact.setEmail(request.getEmail());
+
         if (request.getGroupId() != null) {
             Group group = groupRepository.findById(request.getGroupId())
-                .orElseThrow(() -> new RuntimeException("Groupe non trouvé"));
+                    .orElseThrow(() -> new RuntimeException("Groupe non trouvé"));
             contact.setGroup(group);
         } else {
             contact.setGroup(null);
         }
-        
+
         return contactRepository.save(contact);
     }
 }

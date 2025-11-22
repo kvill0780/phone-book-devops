@@ -77,7 +77,7 @@ const ContactForm = () => {
     }
     
     // Validation email optionnelle
-    if (formData.email && !/\S+@\S+\.\S+/.test(formData.email)) {
+    if (formData.email && formData.email.trim() && !/\S+@\S+\.\S+/.test(formData.email)) {
       return 'Email invalide';
     }
     
@@ -99,6 +99,7 @@ const ContactForm = () => {
     try {
       const contactData = {
         ...formData,
+        email: formData.email.trim() || null,
         group: formData.groupId ? { id: formData.groupId } : null
       };
       delete contactData.groupId;
